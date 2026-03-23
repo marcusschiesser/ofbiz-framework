@@ -37,4 +37,5 @@ desktop.ini
 .*.swo
 *.patch
 node_modules/
+.local-tools/
 /docs/asciidoc/images/

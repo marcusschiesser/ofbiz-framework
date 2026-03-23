@@ -1,0 +1,70 @@
+@import "tailwindcss";
+
+:root {
+  --background: oklch(0.984 0.004 84.6);
+  --foreground: oklch(0.219 0.01 257.41);
+  --card: oklch(0.997 0.002 84.6);
+  --card-foreground: oklch(0.219 0.01 257.41);
+  --popover: oklch(0.997 0.002 84.6);
+  --popover-foreground: oklch(0.219 0.01 257.41);
+  --primary: oklch(0.325 0.035 246.7);
+  --primary-foreground: oklch(0.985 0 0);
+  --secondary: oklch(0.928 0.014 84.63);
+  --secondary-foreground: oklch(0.309 0.015 250.44);
+  --muted: oklch(0.952 0.008 84.6);
+  --muted-foreground: oklch(0.522 0.015 257.38);
+  --accent: oklch(0.89 0.03 79.2);
+  --accent-foreground: oklch(0.309 0.015 250.44);
+  --destructive: oklch(0.577 0.245 27.325);
+  --destructive-foreground: oklch(0.985 0 0);
+  --border: oklch(0.893 0.01 264.52);
+  --input: oklch(0.893 0.01 264.52);
+  --ring: oklch(0.636 0.125 252.5);
+  --success: oklch(0.711 0.117 164.89);
+  --warning: oklch(0.785 0.126 83.6);
+  --radius: 0.875rem;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --font-sans: var(--font-plex-sans);
+  --font-mono: var(--font-plex-mono);
+}
+
+* {
+  @apply border-border;
+}
+
+html {
+  background:
+    radial-gradient(circle at top right, color-mix(in srgb, var(--accent) 22%, transparent) 0, transparent 38%),
+    linear-gradient(180deg, color-mix(in srgb, var(--secondary) 38%, white) 0%, var(--background) 52%, oklch(0.97 0.004 84.6) 100%);
+}
+
+body {
+  @apply min-h-screen bg-background text-foreground antialiased;
+}
+
+a {
+  @apply transition-colors;
+}

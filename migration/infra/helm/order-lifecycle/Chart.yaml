@@ -1,0 +1,7 @@
+apiVersion: v2
+name: order-lifecycle
+description: Cloud-native order lifecycle view extracted from OFBiz
+type: application
+version: 0.1.0
+appVersion: "0.1.0"
+

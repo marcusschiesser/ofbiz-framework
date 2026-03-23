@@ -1,0 +1,62 @@
+services:
+  postgres:
+    image: postgres:18
+    container_name: order-lifecycle-postgres
+    environment:
+      POSTGRES_DB: order_lifecycle
+      POSTGRES_USER: order_lifecycle
+      POSTGRES_PASSWORD: order_lifecycle
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U order_lifecycle -d order_lifecycle"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  backend:
+    image: gradle:9.4.1-jdk21
+    container_name: order-lifecycle-backend
+    working_dir: /workspace/backend
+    command: ["./gradlew", "bootRun", "--no-daemon"]
+    environment:
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: order_lifecycle
+      DB_USERNAME: order_lifecycle
+      DB_PASSWORD: order_lifecycle
+      FRONTEND_ORIGIN: http://localhost:3000
+      APP_SEED_ENABLED: "true"
+      APP_SEED_ONLY: "false"
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./backend:/workspace/backend
+      - gradle-cache:/home/gradle/.gradle
+
+  frontend:
+    image: node:22-alpine
+    container_name: order-lifecycle-frontend
+    working_dir: /workspace/frontend
+    command: ["sh", "-lc", "npm install && npm run dev -- --hostname 0.0.0.0"]
+    environment:
+      BACKEND_URL: http://backend:8080
+    ports:
+      - "3000:3000"
+    depends_on:
+      backend:
+        condition: service_started
+    volumes:
+      - ./frontend:/workspace/frontend
+      - frontend-node-modules:/workspace/frontend/node_modules
+
+volumes:
+  postgres-data:
+  gradle-cache:
+  frontend-node-modules:
+

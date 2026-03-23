@@ -1,0 +1,61 @@
+nameOverride: ""
+fullnameOverride: ""
+
+frontend:
+  image:
+    repository: ghcr.io/example/order-lifecycle-frontend
+    tag: latest
+    pullPolicy: IfNotPresent
+  replicaCount: 2
+  containerPort: 3000
+  service:
+    type: ClusterIP
+    port: 3000
+  resources: {}
+  autoscaling:
+    enabled: false
+    minReplicas: 2
+    maxReplicas: 5
+    targetCPUUtilizationPercentage: 75
+
+backend:
+  image:
+    repository: ghcr.io/example/order-lifecycle-backend
+    tag: latest
+    pullPolicy: IfNotPresent
+  replicaCount: 2
+  containerPort: 8080
+  service:
+    type: ClusterIP
+    port: 8080
+  resources: {}
+  autoscaling:
+    enabled: false
+    minReplicas: 2
+    maxReplicas: 5
+    targetCPUUtilizationPercentage: 75
+  cors:
+    frontendOrigin: https://orders.example.com
+
+database:
+  host: postgres.example.internal
+  port: 5432
+  name: order_lifecycle
+  existingSecret:
+    name: order-lifecycle-db
+    usernameKey: username
+    passwordKey: password
+
+ingress:
+  enabled: true
+  className: nginx
+  annotations: {}
+  host: orders.example.com
+  tls: []
+
+seed:
+  enabled: false
+  hookAnnotations:
+    "helm.sh/hook": post-install,post-upgrade
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+

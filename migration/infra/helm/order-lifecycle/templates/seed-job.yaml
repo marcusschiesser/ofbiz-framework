@@ -1,0 +1,41 @@
+{{- if .Values.seed.enabled }}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ include "order-lifecycle.fullname" . }}-seed
+  labels:
+    {{- include "order-lifecycle.labels" . | nindent 4 }}
+  annotations:
+    {{- toYaml .Values.seed.hookAnnotations | nindent 4 }}
+spec:
+  template:
+    metadata:
+      labels:
+        {{- include "order-lifecycle.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: seed
+    spec:
+      restartPolicy: OnFailure
+      containers:
+        - name: seed
+          image: "{{ .Values.backend.image.repository }}:{{ .Values.backend.image.tag }}"
+          imagePullPolicy: {{ .Values.backend.image.pullPolicy }}
+          envFrom:
+            - configMapRef:
+                name: {{ include "order-lifecycle.backendConfigMapName" . }}
+          env:
+            - name: APP_SEED_ENABLED
+              value: "true"
+            - name: APP_SEED_ONLY
+              value: "true"
+            - name: DB_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.database.existingSecret.name }}
+                  key: {{ .Values.database.existingSecret.usernameKey }}
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.database.existingSecret.name }}
+                  key: {{ .Values.database.existingSecret.passwordKey }}
+{{- end }}
+
