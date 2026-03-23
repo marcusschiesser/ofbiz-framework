@@ -10,9 +10,12 @@ test("operators can create, update, pay, ship, and complete an order", async ({ 
 
   await expect(page).toHaveURL(/\/orders\/[^/]+$/);
   await expect(page.getByText("PENDING")).toBeVisible();
+  await expect(page.getByText("v0")).toBeVisible();
 
   await page.getByLabel("Notes").last().fill("Priority handling requested");
   await page.getByRole("button", { name: "Save Updates" }).click();
+  await expect(page.getByText("v1")).toBeVisible();
+  await expect(page.getByLabel("Notes").last()).toHaveValue("Priority handling requested");
   await expect(page.getByText("Priority handling requested")).toBeVisible();
 
   await page.getByRole("button", { name: "Mark Paid" }).click();
