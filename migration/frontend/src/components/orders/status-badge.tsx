@@ -13,5 +13,9 @@ const variantByStatus: Record<
 };
 
 export function StatusBadge({ status }: { status: OrderStatus }) {
-  return <Badge variant={variantByStatus[status]}>{status}</Badge>;
+  return (
+    <Badge data-testid="order-status-badge" variant={variantByStatus[status]}>
+      {status}
+    </Badge>
+  );
 }
