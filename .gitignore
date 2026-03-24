@@ -17,12 +17,16 @@ runtime/data/utilcache.*
 runtime/catalina/work/*
 runtime/tempfiles/*
 runtime/indexes/products/
+docker/examples/postgres-demo/logs/
+docker/examples/postgres-demo/lib-extra/
 !runtime/tempfiles/README
 changelog
 .classpath
 .project
 .settings
 .gradle/
+.kotlin/
+.gradle-user-home/
 .groovy
 .pc
 .DS_Store
@@ -38,3 +42,10 @@ desktop.ini
 *.patch
 node_modules/
 /docs/asciidoc/images/
+/modern/backend/.gradle/
+/modern/backend/build/
+/modern/web/.git/
+/modern/web/.next/
+/modern/web/test-results/
+/modern/web/AGENTS.md
+/modern/web/CLAUDE.md

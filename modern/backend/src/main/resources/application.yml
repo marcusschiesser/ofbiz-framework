@@ -1,0 +1,38 @@
+server:
+  port: ${SERVER_PORT:8081}
+
+spring:
+  application:
+    name: leadflow-backend
+  datasource:
+    url: ${LEADFLOW_DB_URL:jdbc:postgresql://localhost:55432/ofbizmaindb}
+    username: ${LEADFLOW_DB_USERNAME:ofbiz}
+    password: ${LEADFLOW_DB_PASSWORD:ofbiz}
+  jackson:
+    default-property-inclusion: non_null
+  jooq:
+    sql-dialect: postgres
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+
+leadflow:
+  ofbiz:
+    base-url: ${LEADFLOW_OFBIZ_BASE_URL:https://localhost:8443}
+    created-by-user-login-id: ${LEADFLOW_CREATED_BY_USER_LOGIN_ID:admin}
+    internal-organization-party-id: ${LEADFLOW_INTERNAL_ORGANIZATION_PARTY_ID:Company}
+    lead-owner-party-id: ${LEADFLOW_LEAD_OWNER_PARTY_ID:DemoLeadOwner}
+    product-store-id: ${LEADFLOW_PRODUCT_STORE_ID:9000}
+    web-site-id: ${LEADFLOW_WEB_SITE_ID:WebStore}
+    sales-channel-enum-id: ${LEADFLOW_SALES_CHANNEL_ENUM_ID:PHONE_SALES_CHANNEL}
+    currency-uom-id: ${LEADFLOW_CURRENCY_UOM_ID:USD}
+    default-request-type-id: ${LEADFLOW_REQUEST_TYPE_ID:RF_QUOTE}
+    default-request-status-id: ${LEADFLOW_REQUEST_STATUS_ID:CRQ_SUBMITTED}
+    default-quote-type-id: ${LEADFLOW_QUOTE_TYPE_ID:PRODUCT_QUOTE}
+    default-quote-status-id: ${LEADFLOW_QUOTE_STATUS_ID:QUO_CREATED}
+    default-order-type-id: ${LEADFLOW_ORDER_TYPE_ID:SALES_ORDER}
+    default-order-status-id: ${LEADFLOW_ORDER_STATUS_ID:ORDER_CREATED}
+    default-order-item-status-id: ${LEADFLOW_ORDER_ITEM_STATUS_ID:ITEM_CREATED}

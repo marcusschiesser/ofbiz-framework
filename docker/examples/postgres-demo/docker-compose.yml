@@ -17,8 +17,6 @@
 # under the License.
 #####################################################################
 
-version: "2.4"
-
 services:
   db:
     image: postgres:13
@@ -26,6 +24,13 @@ services:
     memswap_limit: 300M
     cpu_shares: 200
     restart: "no"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+    ports:
+      - 55432:5432
     volumes:
       - ./postgres-initdb.d:/docker-entrypoint-initdb.d
     env_file:
@@ -37,10 +42,14 @@ services:
     mem_limit: 1600M
     memswap_limit: 1600M
     cpu_shares: 200
+    depends_on:
+      db:
+        condition: service_healthy
     ports:
       - 8443:8443
     volumes:
       - ./after-config-applied.d:/docker-entrypoint-hooks/after-config-applied.d
+      - ./lib-extra:/ofbiz/lib-extra
       # Note, on Unix systems, ensure the ofbiz user (uid 1000) or group (gid 1000) running inside the container has
       # write access to this directory on the host. If user namespace remapping is in use, the ofbiz user/group may
       # be mapped to host uid 165536 or gid 166536 depending on the configuration in /etc/subuid and /etc/subgid.
@@ -49,5 +58,36 @@ services:
       - ofbiz-postgres.env
     environment:
       OFBIZ_DATA_LOAD: demo
-      OFBIZ_HOST: example.internal
-      OFBIZ_CONTENT_URL_PREFIX: https://example.internal:8443
+      OFBIZ_HOST: localhost
+      OFBIZ_CONTENT_URL_PREFIX: https://localhost:8443
+      OFBIZ_SKIP_DB_DRIVER_DOWNLOAD: "1"
+
+  backend:
+    build:
+      context: ../../..
+      dockerfile: modern/backend/Dockerfile
+    depends_on:
+      db:
+        condition: service_healthy
+      ofbiz:
+        condition: service_started
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/ofbizmaindb
+      SPRING_DATASOURCE_USERNAME: ofbiz
+      SPRING_DATASOURCE_PASSWORD: ofbiz
+      LEADFLOW_OFBIZ_BASE_URL: https://localhost:8443
+    ports:
+      - 8081:8081
+
+  web:
+    build:
+      context: ../../..
+      dockerfile: modern/web/Dockerfile
+    depends_on:
+      backend:
+        condition: service_started
+    environment:
+      LEADFLOW_API_BASE_URL: http://backend:8081/api
+      OFBIZ_BASE_URL: https://localhost:8443
+    ports:
+      - 3001:3000
