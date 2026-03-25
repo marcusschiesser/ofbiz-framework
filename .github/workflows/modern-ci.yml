@@ -115,6 +115,12 @@ jobs:
       - name: Build OFBiz runtime image
         run: docker build --target runtime -t ofbiz-docker .
 
+      - name: Prepare OFBiz PostgreSQL assets
+        run: |
+          mkdir -p docker/examples/postgres-demo/logs
+          chmod 777 docker/examples/postgres-demo/logs
+          docker/examples/postgres-demo/fetch-postgres-driver.sh
+
       - name: Start PostgreSQL-backed stack
         run: docker compose -f docker/examples/postgres-demo/docker-compose.yml up -d --build
 
