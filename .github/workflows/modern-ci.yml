@@ -10,6 +10,8 @@ on:
       - "gradle/**"
       - "gradlew"
   push:
+    branches:
+      - trunk
     paths:
       - ".github/workflows/modern-ci.yml"
       - "modern/**"
