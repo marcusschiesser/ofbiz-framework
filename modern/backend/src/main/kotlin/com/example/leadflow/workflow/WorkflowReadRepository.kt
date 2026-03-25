@@ -19,15 +19,14 @@ import com.example.leadflow.request.RequestSummary
 import com.example.leadflow.salesorder.SalesOrderDetail
 import com.example.leadflow.salesorder.SalesOrderItemDetail
 import com.example.leadflow.shared.NotFoundException
-import java.math.BigDecimal
 import org.jooq.DSLContext
 import org.springframework.stereotype.Repository
+import java.math.BigDecimal
 
 @Repository
 class WorkflowReadRepository(
     private val dsl: DSLContext,
 ) {
-
     fun listProducts(query: String? = null): List<ProductOption> {
         val searchTerm = query?.trim()?.takeIf { it.isNotEmpty() }
 
@@ -43,7 +42,7 @@ class WorkflowReadRepository(
                     from product
                     order by display_name, product_id
                     limit 100
-                    """
+                    """,
                 )
             } else {
                 dsl.resultQuery(
@@ -114,41 +113,45 @@ class WorkflowReadRepository(
             latestQuoteId = latestQuote?.quoteId,
             brief = latestRequest?.toOpportunityBrief(isLocked = latestQuote != null),
             quote = latestQuote?.toOpportunityQuote(),
-            backOfficeLinks = OpportunityBackOfficeLinks(
-                contactRecordPath = "/partymgr/control/findparty?partyId=${lead.partyId}",
-                accountRecordPath = lead.companyPartyId?.let { "/partymgr/control/findparty?partyId=$it" },
-                quoteRecordPath = latestQuote?.quoteId?.let { "/ordermgr/control/findquotes?quoteId=$it" },
-            ),
+            backOfficeLinks =
+                OpportunityBackOfficeLinks(
+                    contactRecordPath = "/partymgr/control/findparty?partyId=${lead.partyId}",
+                    accountRecordPath = lead.companyPartyId?.let { "/partymgr/control/findparty?partyId=$it" },
+                    quoteRecordPath = latestQuote?.quoteId?.let { "/ordermgr/control/findquotes?quoteId=$it" },
+                ),
         )
     }
 
     fun findLatestRequestIdForLead(partyId: String): String? =
-        dsl.resultQuery(
-            """
+        dsl
+            .resultQuery(
+                """
             select cust_request_id
             from cust_request
             where from_party_id = ?
             order by created_date desc nulls last, cust_request_id desc
             limit 1
             """,
-            partyId,
-        ).fetchOne(0, String::class.java)
+                partyId,
+            ).fetchOne(0, String::class.java)
 
     fun findLatestQuoteIdForLead(partyId: String): String? =
-        dsl.resultQuery(
-            """
+        dsl
+            .resultQuery(
+                """
             select quote_id
             from quote
             where party_id = ?
             order by created_stamp desc nulls last, quote_id desc
             limit 1
             """,
-            partyId,
-        ).fetchOne(0, String::class.java)
+                partyId,
+            ).fetchOne(0, String::class.java)
 
     fun findQuoteIdForRequest(custRequestId: String): String? =
-        dsl.resultQuery(
-            """
+        dsl
+            .resultQuery(
+                """
             select quote_id
             from quote_item
             where cust_request_id = ?
@@ -156,18 +159,17 @@ class WorkflowReadRepository(
             order by quote_id desc
             limit 1
             """,
-            custRequestId,
-        ).fetchOne(0, String::class.java)
+                custRequestId,
+            ).fetchOne(0, String::class.java)
 
-    fun findLatestRequestForLead(partyId: String): RequestDetail? =
-        findLatestRequestIdForLead(partyId)?.let(::getRequest)
+    fun findLatestRequestForLead(partyId: String): RequestDetail? = findLatestRequestIdForLead(partyId)?.let(::getRequest)
 
-    fun findLatestQuoteForLead(partyId: String): QuoteDetail? =
-        findLatestQuoteIdForLead(partyId)?.let(::getQuote)
+    fun findLatestQuoteForLead(partyId: String): QuoteDetail? = findLatestQuoteIdForLead(partyId)?.let(::getQuote)
 
     fun listLeads(): List<LeadSummary> =
-        dsl.resultQuery(
-            """
+        dsl
+            .resultQuery(
+                """
             select
               p.party_id,
               per.first_name,
@@ -204,24 +206,26 @@ class WorkflowReadRepository(
             join person per on per.party_id = p.party_id
             where pr.role_type_id = 'LEAD'
             order by p.created_date desc nulls last, p.party_id desc
-            """
-        ).map { record ->
-            LeadSummary(
-                partyId = record.get("party_id", String::class.java),
-                fullName = listOfNotNull(
-                    record.get("first_name", String::class.java),
-                    record.get("last_name", String::class.java),
-                ).joinToString(" "),
-                companyName = record.get("company_name", String::class.java),
-                statusId = record.get("status_id", String::class.java),
-                email = record.get("email", String::class.java),
-                requestCount = record.get("request_count", Int::class.java) ?: 0,
-            )
-        }
+            """,
+            ).map { record ->
+                LeadSummary(
+                    partyId = record.get("party_id", String::class.java),
+                    fullName =
+                        listOfNotNull(
+                            record.get("first_name", String::class.java),
+                            record.get("last_name", String::class.java),
+                        ).joinToString(" "),
+                    companyName = record.get("company_name", String::class.java),
+                    statusId = record.get("status_id", String::class.java),
+                    email = record.get("email", String::class.java),
+                    requestCount = record.get("request_count", Int::class.java) ?: 0,
+                )
+            }
 
     fun getLead(partyId: String): LeadDetail =
-        dsl.resultQuery(
-            """
+        dsl
+            .resultQuery(
+                """
             select
               p.party_id,
               per.first_name,
@@ -268,25 +272,27 @@ class WorkflowReadRepository(
             join person per on per.party_id = p.party_id
             where p.party_id = ?
             """,
-            partyId,
-        ).fetchOne { record ->
-            LeadDetail(
-                partyId = record.get("party_id", String::class.java),
-                fullName = listOfNotNull(
-                    record.get("first_name", String::class.java),
-                    record.get("last_name", String::class.java),
-                ).joinToString(" "),
-                companyPartyId = record.get("company_party_id", String::class.java),
-                companyName = record.get("company_name", String::class.java),
-                statusId = record.get("status_id", String::class.java),
-                email = record.get("email", String::class.java),
-                requestCount = record.get("request_count", Int::class.java) ?: 0,
-            )
-        } ?: throw NotFoundException("Lead $partyId was not found")
+                partyId,
+            ).fetchOne { record ->
+                LeadDetail(
+                    partyId = record.get("party_id", String::class.java),
+                    fullName =
+                        listOfNotNull(
+                            record.get("first_name", String::class.java),
+                            record.get("last_name", String::class.java),
+                        ).joinToString(" "),
+                    companyPartyId = record.get("company_party_id", String::class.java),
+                    companyName = record.get("company_name", String::class.java),
+                    statusId = record.get("status_id", String::class.java),
+                    email = record.get("email", String::class.java),
+                    requestCount = record.get("request_count", Int::class.java) ?: 0,
+                )
+            } ?: throw NotFoundException("Lead $partyId was not found")
 
     fun getLeadRequests(partyId: String): List<RequestSummary> =
-        dsl.resultQuery(
-            """
+        dsl
+            .resultQuery(
+                """
             select
               cr.cust_request_id,
               cr.cust_request_name,
@@ -300,19 +306,21 @@ class WorkflowReadRepository(
             where cr.from_party_id = ?
             order by cr.created_date desc nulls last, cr.cust_request_id desc
             """,
-            partyId,
-        ).map { record ->
-            RequestSummary(
-                custRequestId = record.get("cust_request_id", String::class.java),
-                name = record.get("cust_request_name", String::class.java),
-                statusId = record.get("status_id", String::class.java),
-                lineCount = record.get("line_count", Int::class.java) ?: 0,
-            )
-        }
+                partyId,
+            ).map { record ->
+                RequestSummary(
+                    custRequestId = record.get("cust_request_id", String::class.java),
+                    name = record.get("cust_request_name", String::class.java),
+                    statusId = record.get("status_id", String::class.java),
+                    lineCount = record.get("line_count", Int::class.java) ?: 0,
+                )
+            }
 
     fun getRequest(custRequestId: String): RequestDetail {
-        val header = dsl.resultQuery(
-            """
+        val header =
+            dsl
+                .resultQuery(
+                    """
             select
               cust_request_id,
               cust_request_name,
@@ -322,11 +330,13 @@ class WorkflowReadRepository(
             from cust_request
             where cust_request_id = ?
             """,
-            custRequestId,
-        ).fetchOne() ?: throw NotFoundException("Request $custRequestId was not found")
+                    custRequestId,
+                ).fetchOne() ?: throw NotFoundException("Request $custRequestId was not found")
 
-        val items = dsl.resultQuery(
-            """
+        val items =
+            dsl
+                .resultQuery(
+                    """
             select
               cust_request_item_seq_id,
               description,
@@ -341,27 +351,29 @@ class WorkflowReadRepository(
             where cust_request_id = ?
             order by cust_request_item_seq_id
             """,
-            custRequestId,
-        ).map { record ->
-            RequestItemDetail(
-                seqId = record.get("cust_request_item_seq_id", String::class.java),
-                description = record.get("description", String::class.java) ?: "",
-                productId = record.get("product_id", String::class.java),
-                quantity = record.get("quantity", BigDecimal::class.java) ?: BigDecimal.ZERO,
-                unitPrice = record.get("unit_price", BigDecimal::class.java) ?: BigDecimal.ZERO,
-                statusId = record.get("status_id", String::class.java),
-            )
-        }
+                    custRequestId,
+                ).map { record ->
+                    RequestItemDetail(
+                        seqId = record.get("cust_request_item_seq_id", String::class.java),
+                        description = record.get("description", String::class.java) ?: "",
+                        productId = record.get("product_id", String::class.java),
+                        quantity = record.get("quantity", BigDecimal::class.java) ?: BigDecimal.ZERO,
+                        unitPrice = record.get("unit_price", BigDecimal::class.java) ?: BigDecimal.ZERO,
+                        statusId = record.get("status_id", String::class.java),
+                    )
+                }
 
-        val quoteIds = dsl.resultQuery(
-            """
+        val quoteIds =
+            dsl
+                .resultQuery(
+                    """
             select distinct quote_id
             from quote_item
             where cust_request_id = ?
             order by quote_id
             """,
-            custRequestId,
-        ).mapNotNull { it.get("quote_id", String::class.java) }
+                    custRequestId,
+                ).mapNotNull { it.get("quote_id", String::class.java) }
 
         return RequestDetail(
             custRequestId = header.get("cust_request_id", String::class.java),
@@ -375,8 +387,10 @@ class WorkflowReadRepository(
     }
 
     fun getQuote(quoteId: String): QuoteDetail {
-        val header = dsl.resultQuery(
-            """
+        val header =
+            dsl
+                .resultQuery(
+                    """
             select
               quote_id,
               quote_type_id,
@@ -388,11 +402,13 @@ class WorkflowReadRepository(
             from quote
             where quote_id = ?
             """,
-            quoteId,
-        ).fetchOne() ?: throw NotFoundException("Quote $quoteId was not found")
+                    quoteId,
+                ).fetchOne() ?: throw NotFoundException("Quote $quoteId was not found")
 
-        val items = dsl.resultQuery(
-            """
+        val items =
+            dsl
+                .resultQuery(
+                    """
             select
               quote_item_seq_id,
               product_id,
@@ -404,27 +420,29 @@ class WorkflowReadRepository(
             where quote_id = ?
             order by quote_item_seq_id
             """,
-            quoteId,
-        ).map { record ->
-            QuoteItemDetail(
-                seqId = record.get("quote_item_seq_id", String::class.java),
-                productId = record.get("product_id", String::class.java),
-                quantity = record.get("quantity", BigDecimal::class.java) ?: BigDecimal.ZERO,
-                unitPrice = record.get("quote_unit_price", BigDecimal::class.java) ?: BigDecimal.ZERO,
-                sourceRequestItemSeqId = record.get("cust_request_item_seq_id", String::class.java),
-                comments = record.get("comments", String::class.java),
-            )
-        }
+                    quoteId,
+                ).map { record ->
+                    QuoteItemDetail(
+                        seqId = record.get("quote_item_seq_id", String::class.java),
+                        productId = record.get("product_id", String::class.java),
+                        quantity = record.get("quantity", BigDecimal::class.java) ?: BigDecimal.ZERO,
+                        unitPrice = record.get("quote_unit_price", BigDecimal::class.java) ?: BigDecimal.ZERO,
+                        sourceRequestItemSeqId = record.get("cust_request_item_seq_id", String::class.java),
+                        comments = record.get("comments", String::class.java),
+                    )
+                }
 
-        val orderIds = dsl.resultQuery(
-            """
+        val orderIds =
+            dsl
+                .resultQuery(
+                    """
             select distinct oi.order_id
             from order_item oi
             where oi.quote_id = ?
             order by oi.order_id
             """,
-            quoteId,
-        ).mapNotNull { it.get("order_id", String::class.java) }
+                    quoteId,
+                ).mapNotNull { it.get("order_id", String::class.java) }
 
         return QuoteDetail(
             quoteId = header.get("quote_id", String::class.java),
@@ -440,8 +458,10 @@ class WorkflowReadRepository(
     }
 
     fun getSalesOrder(orderId: String): SalesOrderDetail {
-        val header = dsl.resultQuery(
-            """
+        val header =
+            dsl
+                .resultQuery(
+                    """
             select
               oh.order_id,
               oh.status_id,
@@ -467,11 +487,13 @@ class WorkflowReadRepository(
             from order_header oh
             where oh.order_id = ?
             """,
-            orderId,
-        ).fetchOne() ?: throw NotFoundException("Sales order $orderId was not found")
+                    orderId,
+                ).fetchOne() ?: throw NotFoundException("Sales order $orderId was not found")
 
-        val items = dsl.resultQuery(
-            """
+        val items =
+            dsl
+                .resultQuery(
+                    """
             select
               order_item_seq_id,
               product_id,
@@ -483,17 +505,17 @@ class WorkflowReadRepository(
             where order_id = ?
             order by order_item_seq_id
             """,
-            orderId,
-        ).map { record ->
-            SalesOrderItemDetail(
-                seqId = record.get("order_item_seq_id", String::class.java),
-                productId = record.get("product_id", String::class.java),
-                description = record.get("item_description", String::class.java),
-                quantity = record.get("quantity", BigDecimal::class.java) ?: BigDecimal.ZERO,
-                unitPrice = record.get("unit_price", BigDecimal::class.java) ?: BigDecimal.ZERO,
-                statusId = record.get("status_id", String::class.java),
-            )
-        }
+                    orderId,
+                ).map { record ->
+                    SalesOrderItemDetail(
+                        seqId = record.get("order_item_seq_id", String::class.java),
+                        productId = record.get("product_id", String::class.java),
+                        description = record.get("item_description", String::class.java),
+                        quantity = record.get("quantity", BigDecimal::class.java) ?: BigDecimal.ZERO,
+                        unitPrice = record.get("unit_price", BigDecimal::class.java) ?: BigDecimal.ZERO,
+                        statusId = record.get("status_id", String::class.java),
+                    )
+                }
 
         return SalesOrderDetail(
             orderId = header.get("order_id", String::class.java),
@@ -511,45 +533,51 @@ class WorkflowReadRepository(
     private fun opportunityStage(
         request: RequestDetail?,
         quote: QuoteDetail?,
-    ): OpportunityStage = when {
-        quote != null -> OpportunityStage.QUOTE_READY
-        request != null -> OpportunityStage.BRIEF_READY
-        else -> OpportunityStage.NEW
-    }
+    ): OpportunityStage =
+        when {
+            quote != null -> OpportunityStage.QUOTE_READY
+            request != null -> OpportunityStage.BRIEF_READY
+            else -> OpportunityStage.NEW
+        }
 
-    private fun nextAction(stage: OpportunityStage): String = when (stage) {
-        OpportunityStage.NEW -> "Add deal brief"
-        OpportunityStage.BRIEF_READY -> "Create quote"
-        OpportunityStage.QUOTE_READY -> "Handed off"
-    }
+    private fun nextAction(stage: OpportunityStage): String =
+        when (stage) {
+            OpportunityStage.NEW -> "Add deal brief"
+            OpportunityStage.BRIEF_READY -> "Create quote"
+            OpportunityStage.QUOTE_READY -> "Handed off"
+        }
 
     private fun currentOpportunityValue(
         request: RequestDetail?,
         quote: QuoteDetail?,
-    ): BigDecimal = when {
-        quote != null -> quote.items.fold(BigDecimal.ZERO) { total, item ->
-            total + item.quantity.multiply(item.unitPrice)
-        }
+    ): BigDecimal =
+        when {
+            quote != null ->
+                quote.items.fold(BigDecimal.ZERO) { total, item ->
+                    total + item.quantity.multiply(item.unitPrice)
+                }
 
-        request != null -> request.items.fold(BigDecimal.ZERO) { total, item ->
-            total + item.quantity.multiply(item.unitPrice)
-        }
+            request != null ->
+                request.items.fold(BigDecimal.ZERO) { total, item ->
+                    total + item.quantity.multiply(item.unitPrice)
+                }
 
-        else -> BigDecimal.ZERO
-    }
+            else -> BigDecimal.ZERO
+        }
 
     private fun RequestDetail.toOpportunityBrief(isLocked: Boolean): OpportunityBriefDetail =
         OpportunityBriefDetail(
             title = name,
             notes = description,
-            lines = items.map { item ->
-                OpportunityLineDetail(
-                    description = item.description,
-                    productId = item.productId,
-                    quantity = item.quantity,
-                    unitPrice = item.unitPrice,
-                )
-            },
+            lines =
+                items.map { item ->
+                    OpportunityLineDetail(
+                        description = item.description,
+                        productId = item.productId,
+                        quantity = item.quantity,
+                        unitPrice = item.unitPrice,
+                    )
+                },
             isLocked = isLocked,
         )
 
@@ -557,17 +585,19 @@ class WorkflowReadRepository(
         OpportunityQuoteSummary(
             quoteId = quoteId,
             statusId = statusId,
-            total = items.fold(BigDecimal.ZERO) { total, item ->
-                total + item.quantity.multiply(item.unitPrice)
-            },
-            items = items.map { item ->
-                OpportunityQuoteItemSummary(
-                    seqId = item.seqId,
-                    description = item.comments ?: item.productId ?: "Quote item ${item.seqId}",
-                    productId = item.productId,
-                    quantity = item.quantity,
-                    unitPrice = item.unitPrice,
-                )
-            },
+            total =
+                items.fold(BigDecimal.ZERO) { total, item ->
+                    total + item.quantity.multiply(item.unitPrice)
+                },
+            items =
+                items.map { item ->
+                    OpportunityQuoteItemSummary(
+                        seqId = item.seqId,
+                        description = item.comments ?: item.productId ?: "Quote item ${item.seqId}",
+                        productId = item.productId,
+                        quantity = item.quantity,
+                        unitPrice = item.unitPrice,
+                    )
+                },
         )
 }

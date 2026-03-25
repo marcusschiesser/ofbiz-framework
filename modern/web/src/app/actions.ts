@@ -81,8 +81,14 @@ function readLineInputs(formData: FormData) {
       continue;
     }
 
-    if (description.length === 0 || quantity.length === 0 || unitPrice.length === 0) {
-      throw new Error("Each line needs an item description, quantity, and unit price.");
+    if (
+      description.length === 0 ||
+      quantity.length === 0 ||
+      unitPrice.length === 0
+    ) {
+      throw new Error(
+        "Each line needs an item description, quantity, and unit price.",
+      );
     }
 
     lines.push({

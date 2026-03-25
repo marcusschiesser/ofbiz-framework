@@ -68,7 +68,8 @@ export function DealBriefForm({
 }: DealBriefFormProps) {
   const [lines, setLines] = useState<LineDraft[]>(() => initialLines(brief));
 
-  const defaultTitle = brief?.title ?? `${companyName ?? displayName} pricing brief`;
+  const defaultTitle =
+    brief?.title ?? `${companyName ?? displayName} pricing brief`;
   const defaultNotes =
     brief?.notes ??
     "Summarize the customer need, commercial context, and any delivery notes for pricing.";
@@ -83,7 +84,12 @@ export function DealBriefForm({
         </Field>
         <Field>
           <FieldLabel htmlFor="notes">Customer notes</FieldLabel>
-          <Textarea defaultValue={defaultNotes} id="notes" name="notes" rows={5} />
+          <Textarea
+            defaultValue={defaultNotes}
+            id="notes"
+            name="notes"
+            rows={5}
+          />
           <FieldDescription>
             Capture the buying context, timing, and any pricing considerations.
           </FieldDescription>
@@ -91,13 +97,20 @@ export function DealBriefForm({
 
         <div className="flex flex-col gap-4">
           {lines.map((line, index) => (
-            <div className="surface-muted flex flex-col gap-4 p-4" key={line.id}>
+            <div
+              className="surface-muted flex flex-col gap-4 p-4"
+              key={line.id}
+            >
               <div className="flex items-center justify-between gap-3">
                 <p className="text-sm font-medium">Line {index + 1}</p>
                 {lines.length > 1 ? (
                   <Button
                     onClick={() => {
-                      setLines((current) => current.filter((currentLine) => currentLine.id !== line.id));
+                      setLines((current) =>
+                        current.filter(
+                          (currentLine) => currentLine.id !== line.id,
+                        ),
+                      );
                     }}
                     type="button"
                     variant="outline"
@@ -107,7 +120,9 @@ export function DealBriefForm({
                 ) : null}
               </div>
               <Field>
-                <FieldLabel htmlFor={`lineDescription-${index}`}>Item description</FieldLabel>
+                <FieldLabel htmlFor={`lineDescription-${index}`}>
+                  Item description
+                </FieldLabel>
                 <Input
                   defaultValue={line.description}
                   id={`lineDescription-${index}`}
@@ -117,7 +132,9 @@ export function DealBriefForm({
               </Field>
               <div className="grid gap-4 md:grid-cols-3">
                 <Field>
-                  <FieldLabel htmlFor={`productId-${index}`}>Product</FieldLabel>
+                  <FieldLabel htmlFor={`productId-${index}`}>
+                    Product
+                  </FieldLabel>
                   <ProductCombobox
                     defaultProductId={line.productId}
                     inputId={`productId-${index}`}
@@ -126,7 +143,9 @@ export function DealBriefForm({
                   />
                 </Field>
                 <Field>
-                  <FieldLabel htmlFor={`quantity-${index}`}>Quantity</FieldLabel>
+                  <FieldLabel htmlFor={`quantity-${index}`}>
+                    Quantity
+                  </FieldLabel>
                   <Input
                     defaultValue={line.quantity}
                     id={`quantity-${index}`}
@@ -138,7 +157,9 @@ export function DealBriefForm({
                   />
                 </Field>
                 <Field>
-                  <FieldLabel htmlFor={`unitPrice-${index}`}>Unit price</FieldLabel>
+                  <FieldLabel htmlFor={`unitPrice-${index}`}>
+                    Unit price
+                  </FieldLabel>
                   <Input
                     defaultValue={line.unitPrice}
                     id={`unitPrice-${index}`}

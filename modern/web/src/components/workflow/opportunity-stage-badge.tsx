@@ -17,5 +17,9 @@ function variantForStage(stage: OpportunityStage) {
 }
 
 export function OpportunityStageBadge({ stage }: OpportunityStageBadgeProps) {
-  return <Badge variant={variantForStage(stage)}>{formatOpportunityStage(stage)}</Badge>;
+  return (
+    <Badge variant={variantForStage(stage)}>
+      {formatOpportunityStage(stage)}
+    </Badge>
+  );
 }

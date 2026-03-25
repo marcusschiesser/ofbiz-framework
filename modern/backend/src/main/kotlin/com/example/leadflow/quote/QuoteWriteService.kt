@@ -7,10 +7,10 @@ import com.example.leadflow.ofbiz.OfbizTables
 import com.example.leadflow.shared.ConflictException
 import com.example.leadflow.shared.NotFoundException
 import com.example.leadflow.workflow.WorkflowReadRepository
-import java.math.BigDecimal
 import org.jooq.DSLContext
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
+import java.math.BigDecimal
 
 @Service
 class QuoteWriteService(
@@ -19,7 +19,6 @@ class QuoteWriteService(
     private val sequenceService: OfbizSequenceService,
     private val workflowReadRepository: WorkflowReadRepository,
 ) {
-
     @Transactional
     fun createQuoteForOpportunity(leadPartyId: String): QuoteDetail {
         val existingQuoteId = workflowReadRepository.findLatestQuoteIdForLead(leadPartyId)
@@ -27,8 +26,9 @@ class QuoteWriteService(
             return workflowReadRepository.getQuote(existingQuoteId)
         }
 
-        val latestRequestId = workflowReadRepository.findLatestRequestIdForLead(leadPartyId)
-            ?: throw ConflictException("Save the deal brief before creating a quote.")
+        val latestRequestId =
+            workflowReadRepository.findLatestRequestIdForLead(leadPartyId)
+                ?: throw ConflictException("Save the deal brief before creating a quote.")
 
         return createQuoteFromRequest(latestRequestId)
     }
@@ -47,7 +47,8 @@ class QuoteWriteService(
         val quoteId = sequenceService.nextId("Quote")
         val requestTakerPartyId = resolveRequestTakerPartyId()
 
-        dsl.insertInto(OfbizTables.Quote.TABLE)
+        dsl
+            .insertInto(OfbizTables.Quote.TABLE)
             .set(OfbizTables.Quote.QUOTE_ID, quoteId)
             .set(OfbizTables.Quote.QUOTE_TYPE_ID, properties.defaultQuoteTypeId)
             .set(OfbizTables.Quote.PARTY_ID, request.leadPartyId)
@@ -66,7 +67,8 @@ class QuoteWriteService(
             .set(OfbizTables.Quote.CREATED_TX_STAMP, stamp.now)
             .execute()
 
-        dsl.insertInto(OfbizTables.QuoteRole.TABLE)
+        dsl
+            .insertInto(OfbizTables.QuoteRole.TABLE)
             .set(OfbizTables.QuoteRole.QUOTE_ID, quoteId)
             .set(OfbizTables.QuoteRole.PARTY_ID, requestTakerPartyId)
             .set(OfbizTables.QuoteRole.ROLE_TYPE_ID, "REQ_TAKER")
@@ -77,18 +79,21 @@ class QuoteWriteService(
             .set(OfbizTables.QuoteRole.CREATED_TX_STAMP, stamp.now)
             .execute()
 
-        val requestRoles = dsl.resultQuery(
-            """
+        val requestRoles =
+            dsl
+                .resultQuery(
+                    """
             select party_id, role_type_id
             from cust_request_party
             where cust_request_id = ?
             order by party_id, role_type_id
             """,
-            custRequestId,
-        ).fetch()
+                    custRequestId,
+                ).fetch()
 
         requestRoles.forEach { record ->
-            dsl.insertInto(OfbizTables.QuoteRole.TABLE)
+            dsl
+                .insertInto(OfbizTables.QuoteRole.TABLE)
                 .set(OfbizTables.QuoteRole.QUOTE_ID, quoteId)
                 .set(OfbizTables.QuoteRole.PARTY_ID, record.get("party_id", String::class.java))
                 .set(OfbizTables.QuoteRole.ROLE_TYPE_ID, record.get("role_type_id", String::class.java))
@@ -101,13 +106,15 @@ class QuoteWriteService(
         }
 
         request.items.forEach { item ->
-            val quoteItemSeqId = sequenceService.nextSubSequence(
-                tableName = "quote_item",
-                sequenceColumn = "quote_item_seq_id",
-                matchColumns = mapOf("quote_id" to quoteId),
-            )
+            val quoteItemSeqId =
+                sequenceService.nextSubSequence(
+                    tableName = "quote_item",
+                    sequenceColumn = "quote_item_seq_id",
+                    matchColumns = mapOf("quote_id" to quoteId),
+                )
 
-            dsl.insertInto(OfbizTables.QuoteItem.TABLE)
+            dsl
+                .insertInto(OfbizTables.QuoteItem.TABLE)
                 .set(OfbizTables.QuoteItem.QUOTE_ID, quoteId)
                 .set(OfbizTables.QuoteItem.QUOTE_ITEM_SEQ_ID, quoteItemSeqId)
                 .set(OfbizTables.QuoteItem.PRODUCT_ID, item.productId)
@@ -129,15 +136,16 @@ class QuoteWriteService(
 
     private fun lockRequest(custRequestId: String) {
         val locked =
-            dsl.resultQuery(
-                """
+            dsl
+                .resultQuery(
+                    """
                 select cust_request_id
                 from cust_request
                 where cust_request_id = ?
                 for update
                 """,
-                custRequestId,
-            ).fetchOne(0, String::class.java)
+                    custRequestId,
+                ).fetchOne(0, String::class.java)
 
         if (locked == null) {
             throw NotFoundException("Request $custRequestId was not found")
@@ -145,7 +153,8 @@ class QuoteWriteService(
     }
 
     private fun resolveRequestTakerPartyId(): String =
-        dsl.select(OfbizTables.UserLogin.PARTY_ID)
+        dsl
+            .select(OfbizTables.UserLogin.PARTY_ID)
             .from(OfbizTables.UserLogin.TABLE)
             .where(OfbizTables.UserLogin.USER_LOGIN_ID.eq(properties.createdByUserLoginId))
             .fetchOne(OfbizTables.UserLogin.PARTY_ID)

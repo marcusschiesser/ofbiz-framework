@@ -7,10 +7,10 @@ import com.example.leadflow.ofbiz.OfbizSequenceService
 import com.example.leadflow.ofbiz.OfbizTables
 import com.example.leadflow.shared.ConflictException
 import com.example.leadflow.workflow.WorkflowReadRepository
-import java.math.BigDecimal
 import org.jooq.DSLContext
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
+import java.math.BigDecimal
 
 @Service
 class RequestWriteService(
@@ -20,9 +20,11 @@ class RequestWriteService(
     private val leadWriteService: LeadWriteService,
     private val workflowReadRepository: WorkflowReadRepository,
 ) {
-
     @Transactional
-    fun upsertRequest(leadPartyId: String, request: RequestCreateRequest): RequestDetail {
+    fun upsertRequest(
+        leadPartyId: String,
+        request: RequestCreateRequest,
+    ): RequestDetail {
         val existingQuoteId = workflowReadRepository.findLatestQuoteIdForLead(leadPartyId)
         if (existingQuoteId != null) {
             throw ConflictException(
@@ -39,12 +41,16 @@ class RequestWriteService(
     }
 
     @Transactional
-    fun createRequest(leadPartyId: String, request: RequestCreateRequest): RequestDetail {
+    fun createRequest(
+        leadPartyId: String,
+        request: RequestCreateRequest,
+    ): RequestDetail {
         val lead = leadWriteService.requireLead(leadPartyId)
         val stamp = AuditStamp()
         val custRequestId = sequenceService.nextId("CustRequest")
 
-        dsl.insertInto(OfbizTables.CustRequest.TABLE)
+        dsl
+            .insertInto(OfbizTables.CustRequest.TABLE)
             .set(OfbizTables.CustRequest.CUST_REQUEST_ID, custRequestId)
             .set(OfbizTables.CustRequest.CUST_REQUEST_TYPE_ID, properties.defaultRequestTypeId)
             .set(OfbizTables.CustRequest.STATUS_ID, properties.defaultRequestStatusId)
@@ -67,7 +73,8 @@ class RequestWriteService(
             .set(OfbizTables.CustRequest.CREATED_TX_STAMP, stamp.now)
             .execute()
 
-        dsl.insertInto(OfbizTables.CustRequestStatus.TABLE)
+        dsl
+            .insertInto(OfbizTables.CustRequestStatus.TABLE)
             .set(OfbizTables.CustRequestStatus.CUST_REQUEST_STATUS_ID, sequenceService.nextId("CustRequestStatus"))
             .set(OfbizTables.CustRequestStatus.STATUS_ID, properties.defaultRequestStatusId)
             .set(OfbizTables.CustRequestStatus.CUST_REQUEST_ID, custRequestId)
@@ -79,7 +86,8 @@ class RequestWriteService(
             .set(OfbizTables.CustRequestStatus.CREATED_TX_STAMP, stamp.now)
             .execute()
 
-        dsl.insertInto(OfbizTables.CustRequestParty.TABLE)
+        dsl
+            .insertInto(OfbizTables.CustRequestParty.TABLE)
             .set(OfbizTables.CustRequestParty.CUST_REQUEST_ID, custRequestId)
             .set(OfbizTables.CustRequestParty.PARTY_ID, lead.partyId)
             .set(OfbizTables.CustRequestParty.ROLE_TYPE_ID, "LEAD")
@@ -91,7 +99,8 @@ class RequestWriteService(
             .execute()
 
         if (!lead.companyPartyId.isNullOrBlank()) {
-            dsl.insertInto(OfbizTables.CustRequestParty.TABLE)
+            dsl
+                .insertInto(OfbizTables.CustRequestParty.TABLE)
                 .set(OfbizTables.CustRequestParty.CUST_REQUEST_ID, custRequestId)
                 .set(OfbizTables.CustRequestParty.PARTY_ID, lead.companyPartyId)
                 .set(OfbizTables.CustRequestParty.ROLE_TYPE_ID, "ACCOUNT_LEAD")
@@ -104,13 +113,15 @@ class RequestWriteService(
         }
 
         request.lines.forEach { line ->
-            val itemSeqId = sequenceService.nextSubSequence(
-                tableName = "cust_request_item",
-                sequenceColumn = "cust_request_item_seq_id",
-                matchColumns = mapOf("cust_request_id" to custRequestId),
-            )
+            val itemSeqId =
+                sequenceService.nextSubSequence(
+                    tableName = "cust_request_item",
+                    sequenceColumn = "cust_request_item_seq_id",
+                    matchColumns = mapOf("cust_request_id" to custRequestId),
+                )
 
-            dsl.insertInto(OfbizTables.CustRequestItem.TABLE)
+            dsl
+                .insertInto(OfbizTables.CustRequestItem.TABLE)
                 .set(OfbizTables.CustRequestItem.CUST_REQUEST_ID, custRequestId)
                 .set(OfbizTables.CustRequestItem.CUST_REQUEST_ITEM_SEQ_ID, itemSeqId)
                 .set(OfbizTables.CustRequestItem.STATUS_ID, properties.defaultRequestStatusId)
@@ -132,11 +143,16 @@ class RequestWriteService(
 
     fun requireRequest(custRequestId: String): RequestDetail = workflowReadRepository.getRequest(custRequestId)
 
-    private fun updateRequest(custRequestId: String, leadPartyId: String, request: RequestCreateRequest): RequestDetail {
+    private fun updateRequest(
+        custRequestId: String,
+        leadPartyId: String,
+        request: RequestCreateRequest,
+    ): RequestDetail {
         leadWriteService.requireLead(leadPartyId)
         val stamp = AuditStamp()
 
-        dsl.update(OfbizTables.CustRequest.TABLE)
+        dsl
+            .update(OfbizTables.CustRequest.TABLE)
             .set(OfbizTables.CustRequest.CUST_REQUEST_NAME, request.name.trim())
             .set(OfbizTables.CustRequest.DESCRIPTION, request.description)
             .set(OfbizTables.CustRequest.LAST_MODIFIED_DATE, stamp.now)
@@ -146,18 +162,21 @@ class RequestWriteService(
             .where(OfbizTables.CustRequest.CUST_REQUEST_ID.eq(custRequestId))
             .execute()
 
-        dsl.deleteFrom(OfbizTables.CustRequestItem.TABLE)
+        dsl
+            .deleteFrom(OfbizTables.CustRequestItem.TABLE)
             .where(OfbizTables.CustRequestItem.CUST_REQUEST_ID.eq(custRequestId))
             .execute()
 
         request.lines.forEach { line ->
-            val itemSeqId = sequenceService.nextSubSequence(
-                tableName = "cust_request_item",
-                sequenceColumn = "cust_request_item_seq_id",
-                matchColumns = mapOf("cust_request_id" to custRequestId),
-            )
+            val itemSeqId =
+                sequenceService.nextSubSequence(
+                    tableName = "cust_request_item",
+                    sequenceColumn = "cust_request_item_seq_id",
+                    matchColumns = mapOf("cust_request_id" to custRequestId),
+                )
 
-            dsl.insertInto(OfbizTables.CustRequestItem.TABLE)
+            dsl
+                .insertInto(OfbizTables.CustRequestItem.TABLE)
                 .set(OfbizTables.CustRequestItem.CUST_REQUEST_ID, custRequestId)
                 .set(OfbizTables.CustRequestItem.CUST_REQUEST_ITEM_SEQ_ID, itemSeqId)
                 .set(OfbizTables.CustRequestItem.STATUS_ID, properties.defaultRequestStatusId)

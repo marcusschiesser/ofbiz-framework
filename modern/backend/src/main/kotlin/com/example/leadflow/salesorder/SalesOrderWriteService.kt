@@ -6,10 +6,10 @@ import com.example.leadflow.ofbiz.OfbizSequenceService
 import com.example.leadflow.ofbiz.OfbizTables
 import com.example.leadflow.quote.QuoteWriteService
 import com.example.leadflow.workflow.WorkflowReadRepository
-import java.math.BigDecimal
 import org.jooq.DSLContext
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
+import java.math.BigDecimal
 
 @Service
 class SalesOrderWriteService(
@@ -19,22 +19,23 @@ class SalesOrderWriteService(
     private val quoteWriteService: QuoteWriteService,
     private val workflowReadRepository: WorkflowReadRepository,
 ) {
-
     @Transactional
     fun createSalesOrderFromQuote(quoteId: String): SalesOrderDetail {
         val quote = workflowReadRepository.getQuote(quoteId)
         val stamp = AuditStamp()
         val orderId = sequenceService.nextId("OrderHeader")
-        val grandTotal = quote.items.fold(BigDecimal.ZERO) { total, item ->
-            total + item.quantity.multiply(item.unitPrice)
-        }
+        val grandTotal =
+            quote.items.fold(BigDecimal.ZERO) { total, item ->
+                total + item.quantity.multiply(item.unitPrice)
+            }
 
         ensurePartyRole(quote.partyId, "PLACING_CUSTOMER", stamp)
         ensurePartyRole(quote.partyId, "BILL_TO_CUSTOMER", stamp)
         ensurePartyRole(quote.partyId, "END_USER_CUSTOMER", stamp)
         ensurePartyRole(quote.partyId, "SHIP_TO_CUSTOMER", stamp)
 
-        dsl.insertInto(OfbizTables.OrderHeader.TABLE)
+        dsl
+            .insertInto(OfbizTables.OrderHeader.TABLE)
             .set(OfbizTables.OrderHeader.ORDER_ID, orderId)
             .set(OfbizTables.OrderHeader.ORDER_TYPE_ID, properties.defaultOrderTypeId)
             .set(OfbizTables.OrderHeader.ORDER_NAME, "Sales Order for ${quote.quoteName ?: quote.quoteId}")
@@ -63,7 +64,8 @@ class SalesOrderWriteService(
             quote.partyId to "PLACING_CUSTOMER",
             quote.partyId to "SHIP_TO_CUSTOMER",
         ).forEach { (partyId, roleTypeId) ->
-            dsl.insertInto(OfbizTables.OrderRole.TABLE)
+            dsl
+                .insertInto(OfbizTables.OrderRole.TABLE)
                 .set(OfbizTables.OrderRole.ORDER_ID, orderId)
                 .set(OfbizTables.OrderRole.PARTY_ID, partyId)
                 .set(OfbizTables.OrderRole.ROLE_TYPE_ID, roleTypeId)
@@ -74,7 +76,8 @@ class SalesOrderWriteService(
                 .execute()
         }
 
-        dsl.insertInto(OfbizTables.OrderStatus.TABLE)
+        dsl
+            .insertInto(OfbizTables.OrderStatus.TABLE)
             .set(OfbizTables.OrderStatus.ORDER_STATUS_ID, sequenceService.nextId("OrderStatus"))
             .set(OfbizTables.OrderStatus.STATUS_ID, properties.defaultOrderStatusId)
             .set(OfbizTables.OrderStatus.ORDER_ID, orderId)
@@ -87,13 +90,15 @@ class SalesOrderWriteService(
             .execute()
 
         quote.items.forEach { item ->
-            val itemSeqId = sequenceService.nextSubSequence(
-                tableName = "order_item",
-                sequenceColumn = "order_item_seq_id",
-                matchColumns = mapOf("order_id" to orderId),
-            )
+            val itemSeqId =
+                sequenceService.nextSubSequence(
+                    tableName = "order_item",
+                    sequenceColumn = "order_item_seq_id",
+                    matchColumns = mapOf("order_id" to orderId),
+                )
 
-            dsl.insertInto(OfbizTables.OrderItem.TABLE)
+            dsl
+                .insertInto(OfbizTables.OrderItem.TABLE)
                 .set(OfbizTables.OrderItem.ORDER_ID, orderId)
                 .set(OfbizTables.OrderItem.ORDER_ITEM_SEQ_ID, itemSeqId)
                 .set(OfbizTables.OrderItem.ORDER_ITEM_TYPE_ID, "PRODUCT_ORDER_ITEM")
@@ -114,7 +119,8 @@ class SalesOrderWriteService(
                 .set(OfbizTables.OrderItem.CREATED_TX_STAMP, stamp.now)
                 .execute()
 
-            dsl.insertInto(OfbizTables.OrderStatus.TABLE)
+            dsl
+                .insertInto(OfbizTables.OrderStatus.TABLE)
                 .set(OfbizTables.OrderStatus.ORDER_STATUS_ID, sequenceService.nextId("OrderStatus"))
                 .set(OfbizTables.OrderStatus.STATUS_ID, properties.defaultOrderItemStatusId)
                 .set(OfbizTables.OrderStatus.ORDER_ID, orderId)
@@ -128,7 +134,8 @@ class SalesOrderWriteService(
                 .execute()
         }
 
-        dsl.update(OfbizTables.Quote.TABLE)
+        dsl
+            .update(OfbizTables.Quote.TABLE)
             .set(OfbizTables.Quote.STATUS_ID, "QUO_ORDERED")
             .set(OfbizTables.Quote.LAST_UPDATED_STAMP, stamp.now)
             .set(OfbizTables.Quote.LAST_UPDATED_TX_STAMP, stamp.now)
@@ -138,14 +145,21 @@ class SalesOrderWriteService(
         return workflowReadRepository.getSalesOrder(orderId)
     }
 
-    private fun ensurePartyRole(partyId: String, roleTypeId: String, stamp: AuditStamp) {
-        val exists = dsl.fetchExists(
-            OfbizTables.PartyRole.TABLE,
-            OfbizTables.PartyRole.PARTY_ID.eq(partyId)
-                .and(OfbizTables.PartyRole.ROLE_TYPE_ID.eq(roleTypeId))
-        )
+    private fun ensurePartyRole(
+        partyId: String,
+        roleTypeId: String,
+        stamp: AuditStamp,
+    ) {
+        val exists =
+            dsl.fetchExists(
+                OfbizTables.PartyRole.TABLE,
+                OfbizTables.PartyRole.PARTY_ID
+                    .eq(partyId)
+                    .and(OfbizTables.PartyRole.ROLE_TYPE_ID.eq(roleTypeId)),
+            )
         if (!exists) {
-            dsl.insertInto(OfbizTables.PartyRole.TABLE)
+            dsl
+                .insertInto(OfbizTables.PartyRole.TABLE)
                 .set(OfbizTables.PartyRole.PARTY_ID, partyId)
                 .set(OfbizTables.PartyRole.ROLE_TYPE_ID, roleTypeId)
                 .set(OfbizTables.PartyRole.LAST_UPDATED_STAMP, stamp.now)

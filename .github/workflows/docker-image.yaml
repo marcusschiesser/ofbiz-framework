@@ -39,10 +39,7 @@
 name: Build and push docker images
 
 on:
-  push:
-    branches: [ trunk ]
-    tags:
-      - '**'
+  workflow_dispatch:
 
 permissions:
   contents: read

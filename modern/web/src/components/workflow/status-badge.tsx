@@ -19,8 +19,6 @@ function variantForStatus(statusId: string) {
 
 export function StatusBadge({ statusId }: StatusBadgeProps) {
   return (
-    <Badge variant={variantForStatus(statusId)}>
-      {formatStatus(statusId)}
-    </Badge>
+    <Badge variant={variantForStatus(statusId)}>{formatStatus(statusId)}</Badge>
   );
 }

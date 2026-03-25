@@ -17,7 +17,11 @@ import {
   FieldLabel,
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { OpportunityStage, formatCurrency, listOpportunities } from "@/lib/leadflow";
+import {
+  OpportunityStage,
+  formatCurrency,
+  listOpportunities,
+} from "@/lib/leadflow";
 
 const stageOrder: OpportunityStage[] = ["NEW", "BRIEF_READY", "QUOTE_READY"];
 const stageCopy: Record<OpportunityStage, string> = {
@@ -29,9 +33,14 @@ const stageCopy: Record<OpportunityStage, string> = {
 export default async function LeadsPage() {
   const opportunities = await listOpportunities();
   const totals = {
-    NEW: opportunities.filter((opportunity) => opportunity.stage === "NEW").length,
-    BRIEF_READY: opportunities.filter((opportunity) => opportunity.stage === "BRIEF_READY").length,
-    QUOTE_READY: opportunities.filter((opportunity) => opportunity.stage === "QUOTE_READY").length,
+    NEW: opportunities.filter((opportunity) => opportunity.stage === "NEW")
+      .length,
+    BRIEF_READY: opportunities.filter(
+      (opportunity) => opportunity.stage === "BRIEF_READY",
+    ).length,
+    QUOTE_READY: opportunities.filter(
+      (opportunity) => opportunity.stage === "QUOTE_READY",
+    ).length,
   };
 
   return (
@@ -46,7 +55,8 @@ export default async function LeadsPage() {
             <CardHeader>
               <CardTitle>Add opportunity</CardTitle>
               <CardDescription>
-                Start a new deal with the contact and account details the team needs to begin discovery.
+                Start a new deal with the contact and account details the team
+                needs to begin discovery.
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -102,7 +112,10 @@ export default async function LeadsPage() {
             </CardHeader>
             <CardContent className="grid gap-3">
               {stageOrder.map((stage) => (
-                <div className="surface-muted flex items-center justify-between gap-3 p-4" key={stage}>
+                <div
+                  className="surface-muted flex items-center justify-between gap-3 p-4"
+                  key={stage}
+                >
                   <div>
                     <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">
                       {stageCopy[stage]}
@@ -154,7 +167,9 @@ export default async function LeadsPage() {
                       >
                         <div className="flex flex-wrap items-start justify-between gap-3">
                           <div className="space-y-1">
-                            <p className="font-heading text-xl">{opportunity.displayName}</p>
+                            <p className="font-heading text-xl">
+                              {opportunity.displayName}
+                            </p>
                             <p className="text-sm text-muted-foreground">
                               {opportunity.companyName ?? "No account assigned"}
                             </p>
@@ -163,7 +178,9 @@ export default async function LeadsPage() {
                         </div>
                         <div className="grid gap-3 text-sm text-muted-foreground md:grid-cols-3">
                           <span>{opportunity.email ?? "No email on file"}</span>
-                          <span>{formatCurrency(opportunity.currentValue)}</span>
+                          <span>
+                            {formatCurrency(opportunity.currentValue)}
+                          </span>
                           <span>{opportunity.nextAction}</span>
                         </div>
                         <p className="text-xs uppercase tracking-[0.16em] text-muted-foreground">

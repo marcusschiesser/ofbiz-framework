@@ -37,20 +37,23 @@ class WorkflowController(
     private val salesOrderWriteService: SalesOrderWriteService,
     private val opportunityService: OpportunityService,
 ) {
-
     @GetMapping("/opportunities")
     fun listOpportunities(): List<OpportunitySummary> = opportunityService.listOpportunities()
 
     @GetMapping("/products")
-    fun listProducts(@RequestParam(required = false) query: String?) =
-        workflowReadRepository.listProducts(query)
+    fun listProducts(
+        @RequestParam(required = false) query: String?,
+    ) = workflowReadRepository.listProducts(query)
 
     @GetMapping("/opportunities/{partyId}")
-    fun getOpportunity(@PathVariable partyId: String): OpportunityDetail = opportunityService.getOpportunity(partyId)
+    fun getOpportunity(
+        @PathVariable partyId: String,
+    ): OpportunityDetail = opportunityService.getOpportunity(partyId)
 
     @PostMapping("/opportunities")
-    fun createOpportunity(@Valid @RequestBody request: OpportunityCreateRequest): OpportunityDetail =
-        opportunityService.createOpportunity(request)
+    fun createOpportunity(
+        @Valid @RequestBody request: OpportunityCreateRequest,
+    ): OpportunityDetail = opportunityService.createOpportunity(request)
 
     @PutMapping("/opportunities/{partyId}/brief")
     fun saveBrief(
@@ -59,21 +62,27 @@ class WorkflowController(
     ): OpportunityDetail = opportunityService.saveBrief(partyId, request)
 
     @PostMapping("/opportunities/{partyId}/quote")
-    fun createOpportunityQuote(@PathVariable partyId: String): OpportunityDetail =
-        opportunityService.createQuote(partyId)
+    fun createOpportunityQuote(
+        @PathVariable partyId: String,
+    ): OpportunityDetail = opportunityService.createQuote(partyId)
 
     @GetMapping("/leads")
     fun listLeads(): List<LeadSummary> = workflowReadRepository.listLeads()
 
     @GetMapping("/leads/{partyId}")
-    fun getLead(@PathVariable partyId: String): LeadDetail = workflowReadRepository.getLead(partyId)
+    fun getLead(
+        @PathVariable partyId: String,
+    ): LeadDetail = workflowReadRepository.getLead(partyId)
 
     @GetMapping("/leads/{partyId}/requests")
-    fun getLeadRequests(@PathVariable partyId: String): List<RequestSummary> =
-        workflowReadRepository.getLeadRequests(partyId)
+    fun getLeadRequests(
+        @PathVariable partyId: String,
+    ): List<RequestSummary> = workflowReadRepository.getLeadRequests(partyId)
 
     @PostMapping("/leads")
-    fun createLead(@Valid @RequestBody request: LeadCreateRequest): LeadDetail = leadWriteService.createLead(request)
+    fun createLead(
+        @Valid @RequestBody request: LeadCreateRequest,
+    ): LeadDetail = leadWriteService.createLead(request)
 
     @PostMapping("/leads/{partyId}/requests")
     fun createRequest(
@@ -82,19 +91,27 @@ class WorkflowController(
     ): RequestDetail = requestWriteService.createRequest(partyId, request)
 
     @GetMapping("/requests/{custRequestId}")
-    fun getRequest(@PathVariable custRequestId: String): RequestDetail = workflowReadRepository.getRequest(custRequestId)
+    fun getRequest(
+        @PathVariable custRequestId: String,
+    ): RequestDetail = workflowReadRepository.getRequest(custRequestId)
 
     @PostMapping("/requests/{custRequestId}/quotes")
-    fun createQuote(@PathVariable custRequestId: String): QuoteDetail = quoteWriteService.createQuoteFromRequest(custRequestId)
+    fun createQuote(
+        @PathVariable custRequestId: String,
+    ): QuoteDetail = quoteWriteService.createQuoteFromRequest(custRequestId)
 
     @GetMapping("/quotes/{quoteId}")
-    fun getQuote(@PathVariable quoteId: String): QuoteDetail = workflowReadRepository.getQuote(quoteId)
+    fun getQuote(
+        @PathVariable quoteId: String,
+    ): QuoteDetail = workflowReadRepository.getQuote(quoteId)
 
     @PostMapping("/quotes/{quoteId}/sales-orders")
-    fun createSalesOrder(@PathVariable quoteId: String): SalesOrderDetail =
-        salesOrderWriteService.createSalesOrderFromQuote(quoteId)
+    fun createSalesOrder(
+        @PathVariable quoteId: String,
+    ): SalesOrderDetail = salesOrderWriteService.createSalesOrderFromQuote(quoteId)
 
     @GetMapping("/sales-orders/{orderId}")
-    fun getSalesOrder(@PathVariable orderId: String): SalesOrderDetail =
-        workflowReadRepository.getSalesOrder(orderId)
+    fun getSalesOrder(
+        @PathVariable orderId: String,
+    ): SalesOrderDetail = workflowReadRepository.getSalesOrder(orderId)
 }

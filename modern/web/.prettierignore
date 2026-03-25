@@ -1,0 +1,7 @@
+.next
+node_modules
+test-results
+playwright-report
+AGENTS.md
+CLAUDE.md
+README.md

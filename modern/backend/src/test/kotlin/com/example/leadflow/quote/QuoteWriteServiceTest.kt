@@ -7,17 +7,17 @@ import com.example.leadflow.opportunity.OpportunityCreateRequest
 import com.example.leadflow.opportunity.OpportunityLineInput
 import com.example.leadflow.opportunity.OpportunityService
 import com.example.leadflow.workflow.WorkflowReadRepository
-import java.math.BigDecimal
-import java.util.concurrent.Callable
-import java.util.concurrent.CountDownLatch
-import java.util.concurrent.Executors
-import java.util.concurrent.TimeUnit
 import org.jooq.DSLContext
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.test.context.TestConstructor
+import java.math.BigDecimal
+import java.util.concurrent.Callable
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.Executors
+import java.util.concurrent.TimeUnit
 
 @SpringBootTest
 @TestConstructor(autowireMode = TestConstructor.AutowireMode.ALL)
@@ -28,20 +28,21 @@ class QuoteWriteServiceTest(
     private val quoteWriteService: QuoteWriteService,
     private val workflowReadRepository: WorkflowReadRepository,
 ) {
-
     @Test
     fun `quote creation stores req taker role using the user login party id`() {
         val requestId = createRequestForQuote()
         val quote = quoteWriteService.createQuoteFromRequest(requestId)
 
         val expectedPartyId =
-            dsl.select(OfbizTables.UserLogin.PARTY_ID)
+            dsl
+                .select(OfbizTables.UserLogin.PARTY_ID)
                 .from(OfbizTables.UserLogin.TABLE)
                 .where(OfbizTables.UserLogin.USER_LOGIN_ID.eq(properties.createdByUserLoginId))
                 .fetchOne(OfbizTables.UserLogin.PARTY_ID)
 
         val actualPartyId =
-            dsl.select(OfbizTables.QuoteRole.PARTY_ID)
+            dsl
+                .select(OfbizTables.QuoteRole.PARTY_ID)
                 .from(OfbizTables.QuoteRole.TABLE)
                 .where(OfbizTables.QuoteRole.QUOTE_ID.eq(quote.quoteId))
                 .and(OfbizTables.QuoteRole.ROLE_TYPE_ID.eq("REQ_TAKER"))
@@ -76,16 +77,17 @@ class QuoteWriteServiceTest(
             assertEquals(1, quoteIds.toSet().size)
 
             val persistedQuoteIds =
-                dsl.resultQuery(
-                    """
+                dsl
+                    .resultQuery(
+                        """
                     select distinct quote_id
                     from quote_item
                     where cust_request_id = ?
                       and quote_id is not null
                     order by quote_id
                     """,
-                    requestId,
-                ).mapNotNull { it.get("quote_id", String::class.java) }
+                        requestId,
+                    ).mapNotNull { it.get("quote_id", String::class.java) }
 
             assertEquals(1, persistedQuoteIds.size)
             assertEquals(quoteIds.first(), persistedQuoteIds.single())
@@ -111,14 +113,15 @@ class QuoteWriteServiceTest(
             OpportunityBriefInput(
                 title = "Quote request $suffix",
                 notes = "Prepared for quote creation test",
-                lines = listOf(
-                    OpportunityLineInput(
-                        description = "Round gizmo line",
-                        productId = "GZ-2644",
-                        quantity = BigDecimal("2"),
-                        unitPrice = BigDecimal("24.50"),
+                lines =
+                    listOf(
+                        OpportunityLineInput(
+                            description = "Round gizmo line",
+                            productId = "GZ-2644",
+                            quantity = BigDecimal("2"),
+                            unitPrice = BigDecimal("24.50"),
+                        ),
                     ),
-                ),
             ),
         )
 

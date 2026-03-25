@@ -150,7 +150,8 @@ export type SalesOrderDetail = {
   items: SalesOrderItemDetail[];
 };
 
-const apiBaseUrl = process.env.LEADFLOW_API_BASE_URL ?? "http://localhost:8081/api";
+const apiBaseUrl =
+  process.env.LEADFLOW_API_BASE_URL ?? "http://localhost:8081/api";
 const ofbizBaseUrl = process.env.OFBIZ_BASE_URL ?? "https://localhost:8443";
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
@@ -169,7 +170,9 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
 
   if (!response.ok) {
     const message = await response.text();
-    throw new Error(message || `Unable to complete the request (${response.status}).`);
+    throw new Error(
+      message || `Unable to complete the request (${response.status}).`,
+    );
   }
 
   return (await response.json()) as T;
@@ -203,7 +206,9 @@ export function formatOpportunityStage(stage: OpportunityStage): string {
     .join(" ");
 }
 
-export function totalFromItems(items: Array<{ quantity: number; unitPrice: number }>): number {
+export function totalFromItems(
+  items: Array<{ quantity: number; unitPrice: number }>,
+): number {
   return items.reduce((sum, item) => sum + item.quantity * item.unitPrice, 0);
 }
 
@@ -216,11 +221,15 @@ export async function listProducts(query?: string): Promise<ProductOption[]> {
   return request<ProductOption[]>(`/products${search}`);
 }
 
-export async function getOpportunity(partyId: string): Promise<OpportunityDetail> {
+export async function getOpportunity(
+  partyId: string,
+): Promise<OpportunityDetail> {
   return request<OpportunityDetail>(`/opportunities/${partyId}`);
 }
 
-export async function createOpportunity(input: OpportunityCreateInput): Promise<OpportunityDetail> {
+export async function createOpportunity(
+  input: OpportunityCreateInput,
+): Promise<OpportunityDetail> {
   return request<OpportunityDetail>("/opportunities", {
     method: "POST",
     body: JSON.stringify(input),
@@ -237,13 +246,17 @@ export async function saveOpportunityBrief(
   });
 }
 
-export async function createOpportunityQuote(partyId: string): Promise<OpportunityDetail> {
+export async function createOpportunityQuote(
+  partyId: string,
+): Promise<OpportunityDetail> {
   return request<OpportunityDetail>(`/opportunities/${partyId}/quote`, {
     method: "POST",
   });
 }
 
-export async function getRequest(custRequestId: string): Promise<RequestDetail> {
+export async function getRequest(
+  custRequestId: string,
+): Promise<RequestDetail> {
   return request<RequestDetail>(`/requests/${custRequestId}`);
 }
 
@@ -251,6 +264,8 @@ export async function getQuote(quoteId: string): Promise<QuoteDetail> {
   return request<QuoteDetail>(`/quotes/${quoteId}`);
 }
 
-export async function getSalesOrder(orderId: string): Promise<SalesOrderDetail> {
+export async function getSalesOrder(
+  orderId: string,
+): Promise<SalesOrderDetail> {
   return request<SalesOrderDetail>(`/sales-orders/${orderId}`);
 }

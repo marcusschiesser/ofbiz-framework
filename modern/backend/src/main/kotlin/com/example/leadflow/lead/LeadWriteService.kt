@@ -4,7 +4,6 @@ import com.example.leadflow.config.OfbizProperties
 import com.example.leadflow.ofbiz.AuditStamp
 import com.example.leadflow.ofbiz.OfbizSequenceService
 import com.example.leadflow.ofbiz.OfbizTables
-import com.example.leadflow.shared.NotFoundException
 import com.example.leadflow.workflow.WorkflowReadRepository
 import org.jooq.DSLContext
 import org.springframework.stereotype.Service
@@ -17,7 +16,6 @@ class LeadWriteService(
     private val properties: OfbizProperties,
     private val workflowReadRepository: WorkflowReadRepository,
 ) {
-
     @Transactional
     fun createLead(request: LeadCreateRequest): LeadDetail {
         val stamp = AuditStamp()
@@ -25,7 +23,8 @@ class LeadWriteService(
 
         val partyId = sequenceService.nextId("Party")
 
-        dsl.insertInto(OfbizTables.Party.TABLE)
+        dsl
+            .insertInto(OfbizTables.Party.TABLE)
             .set(OfbizTables.Party.PARTY_ID, partyId)
             .set(OfbizTables.Party.PARTY_TYPE_ID, "PERSON")
             .set(OfbizTables.Party.STATUS_ID, "LEAD_ASSIGNED")
@@ -40,7 +39,8 @@ class LeadWriteService(
             .set(OfbizTables.Party.CREATED_TX_STAMP, stamp.now)
             .execute()
 
-        dsl.insertInto(OfbizTables.Person.TABLE)
+        dsl
+            .insertInto(OfbizTables.Person.TABLE)
             .set(OfbizTables.Person.PARTY_ID, partyId)
             .set(OfbizTables.Person.FIRST_NAME, request.firstName.trim())
             .set(OfbizTables.Person.LAST_NAME, request.lastName.trim())
@@ -66,7 +66,8 @@ class LeadWriteService(
 
         if (!request.companyName.isNullOrBlank()) {
             val companyPartyId = sequenceService.nextId("Party")
-            dsl.insertInto(OfbizTables.Party.TABLE)
+            dsl
+                .insertInto(OfbizTables.Party.TABLE)
                 .set(OfbizTables.Party.PARTY_ID, companyPartyId)
                 .set(OfbizTables.Party.PARTY_TYPE_ID, "PARTY_GROUP")
                 .set(OfbizTables.Party.STATUS_ID, "LEAD_ASSIGNED")
@@ -81,7 +82,8 @@ class LeadWriteService(
                 .set(OfbizTables.Party.CREATED_TX_STAMP, stamp.now)
                 .execute()
 
-            dsl.insertInto(OfbizTables.PartyGroup.TABLE)
+            dsl
+                .insertInto(OfbizTables.PartyGroup.TABLE)
                 .set(OfbizTables.PartyGroup.PARTY_ID, companyPartyId)
                 .set(OfbizTables.PartyGroup.GROUP_NAME, request.companyName.trim())
                 .set(OfbizTables.PartyGroup.LAST_UPDATED_STAMP, stamp.now)
@@ -117,14 +119,21 @@ class LeadWriteService(
 
     fun requireLead(partyId: String): LeadDetail = workflowReadRepository.getLead(partyId)
 
-    private fun ensureRole(partyId: String, roleTypeId: String, stamp: AuditStamp) {
-        val exists = dsl.fetchExists(
-            OfbizTables.PartyRole.TABLE,
-            OfbizTables.PartyRole.PARTY_ID.eq(partyId)
-                .and(OfbizTables.PartyRole.ROLE_TYPE_ID.eq(roleTypeId))
-        )
+    private fun ensureRole(
+        partyId: String,
+        roleTypeId: String,
+        stamp: AuditStamp,
+    ) {
+        val exists =
+            dsl.fetchExists(
+                OfbizTables.PartyRole.TABLE,
+                OfbizTables.PartyRole.PARTY_ID
+                    .eq(partyId)
+                    .and(OfbizTables.PartyRole.ROLE_TYPE_ID.eq(roleTypeId)),
+            )
         if (!exists) {
-            dsl.insertInto(OfbizTables.PartyRole.TABLE)
+            dsl
+                .insertInto(OfbizTables.PartyRole.TABLE)
                 .set(OfbizTables.PartyRole.PARTY_ID, partyId)
                 .set(OfbizTables.PartyRole.ROLE_TYPE_ID, roleTypeId)
                 .set(OfbizTables.PartyRole.LAST_UPDATED_STAMP, stamp.now)
@@ -144,7 +153,8 @@ class LeadWriteService(
         positionTitle: String?,
         stamp: AuditStamp,
     ) {
-        dsl.insertInto(OfbizTables.PartyRelationship.TABLE)
+        dsl
+            .insertInto(OfbizTables.PartyRelationship.TABLE)
             .set(OfbizTables.PartyRelationship.PARTY_ID_FROM, partyIdFrom)
             .set(OfbizTables.PartyRelationship.ROLE_TYPE_ID_FROM, roleTypeIdFrom)
             .set(OfbizTables.PartyRelationship.PARTY_ID_TO, partyIdTo)
@@ -159,10 +169,15 @@ class LeadWriteService(
             .execute()
     }
 
-    private fun insertPrimaryEmail(partyId: String, email: String, stamp: AuditStamp) {
+    private fun insertPrimaryEmail(
+        partyId: String,
+        email: String,
+        stamp: AuditStamp,
+    ) {
         val contactMechId = sequenceService.nextId("ContactMech")
 
-        dsl.insertInto(OfbizTables.ContactMech.TABLE)
+        dsl
+            .insertInto(OfbizTables.ContactMech.TABLE)
             .set(OfbizTables.ContactMech.CONTACT_MECH_ID, contactMechId)
             .set(OfbizTables.ContactMech.CONTACT_MECH_TYPE_ID, "EMAIL_ADDRESS")
             .set(OfbizTables.ContactMech.INFO_STRING, email)
@@ -172,7 +187,8 @@ class LeadWriteService(
             .set(OfbizTables.ContactMech.CREATED_TX_STAMP, stamp.now)
             .execute()
 
-        dsl.insertInto(OfbizTables.PartyContactMech.TABLE)
+        dsl
+            .insertInto(OfbizTables.PartyContactMech.TABLE)
             .set(OfbizTables.PartyContactMech.PARTY_ID, partyId)
             .set(OfbizTables.PartyContactMech.CONTACT_MECH_ID, contactMechId)
             .set(OfbizTables.PartyContactMech.FROM_DATE, stamp.now)
@@ -183,7 +199,8 @@ class LeadWriteService(
             .set(OfbizTables.PartyContactMech.CREATED_TX_STAMP, stamp.now)
             .execute()
 
-        dsl.insertInto(OfbizTables.PartyContactMechPurpose.TABLE)
+        dsl
+            .insertInto(OfbizTables.PartyContactMechPurpose.TABLE)
             .set(OfbizTables.PartyContactMechPurpose.PARTY_ID, partyId)
             .set(OfbizTables.PartyContactMechPurpose.CONTACT_MECH_ID, contactMechId)
             .set(OfbizTables.PartyContactMechPurpose.CONTACT_MECH_PURPOSE_TYPE_ID, "PRIMARY_EMAIL")
@@ -195,12 +212,17 @@ class LeadWriteService(
             .execute()
     }
 
-    private fun insertPartyDataSource(partyId: String, dataSourceId: String?, stamp: AuditStamp) {
+    private fun insertPartyDataSource(
+        partyId: String,
+        dataSourceId: String?,
+        stamp: AuditStamp,
+    ) {
         if (dataSourceId.isNullOrBlank()) {
             return
         }
 
-        dsl.insertInto(OfbizTables.PartyDataSource.TABLE)
+        dsl
+            .insertInto(OfbizTables.PartyDataSource.TABLE)
             .set(OfbizTables.PartyDataSource.PARTY_ID, partyId)
             .set(OfbizTables.PartyDataSource.DATA_SOURCE_ID, dataSourceId)
             .set(OfbizTables.PartyDataSource.FROM_DATE, stamp.now)

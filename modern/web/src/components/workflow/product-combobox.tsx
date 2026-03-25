@@ -15,7 +15,10 @@ function optionLabel(product: ProductOption): string {
   return `${product.displayName} (${product.productId})`;
 }
 
-function findSelectedProduct(products: ProductOption[], value: string): ProductOption | null {
+function findSelectedProduct(
+  products: ProductOption[],
+  value: string,
+): ProductOption | null {
   const normalized = value.trim().toLowerCase();
 
   if (normalized.length === 0) {
@@ -23,8 +26,12 @@ function findSelectedProduct(products: ProductOption[], value: string): ProductO
   }
 
   return (
-    products.find((product) => product.productId.toLowerCase() === normalized) ??
-    products.find((product) => optionLabel(product).toLowerCase() === normalized) ??
+    products.find(
+      (product) => product.productId.toLowerCase() === normalized,
+    ) ??
+    products.find(
+      (product) => optionLabel(product).toLowerCase() === normalized,
+    ) ??
     null
   );
 }
@@ -36,14 +43,19 @@ export function ProductCombobox({
   products,
 }: ProductComboboxProps) {
   const listId = useId();
-  const defaultProduct = products.find((product) => product.productId === defaultProductId) ?? null;
+  const defaultProduct =
+    products.find((product) => product.productId === defaultProductId) ?? null;
   const [selectionText, setSelectionText] = useState(
-    defaultProduct ? optionLabel(defaultProduct) : defaultProductId ?? "",
+    defaultProduct ? optionLabel(defaultProduct) : (defaultProductId ?? ""),
   );
-  const [selectedProductId, setSelectedProductId] = useState(defaultProduct?.productId ?? defaultProductId ?? "");
+  const [selectedProductId, setSelectedProductId] = useState(
+    defaultProduct?.productId ?? defaultProductId ?? "",
+  );
 
-  const selectedProduct = products.find((product) => product.productId === selectedProductId) ?? null;
-  const hasPendingText = selectionText.trim().length > 0 && selectedProduct == null;
+  const selectedProduct =
+    products.find((product) => product.productId === selectedProductId) ?? null;
+  const hasPendingText =
+    selectionText.trim().length > 0 && selectedProduct == null;
 
   return (
     <div className="flex flex-col gap-2">
@@ -52,9 +64,14 @@ export function ProductCombobox({
         id={inputId}
         list={listId}
         onBlur={(event) => {
-          const matchedProduct = findSelectedProduct(products, event.target.value);
+          const matchedProduct = findSelectedProduct(
+            products,
+            event.target.value,
+          );
           setSelectedProductId(matchedProduct?.productId ?? "");
-          setSelectionText(matchedProduct ? optionLabel(matchedProduct) : event.target.value);
+          setSelectionText(
+            matchedProduct ? optionLabel(matchedProduct) : event.target.value,
+          );
         }}
         onChange={(event) => {
           const nextValue = event.target.value;

@@ -1,11 +1,11 @@
 package com.example.leadflow.ofbiz
 
-import java.math.BigDecimal
-import java.time.OffsetDateTime
 import org.jooq.Field
 import org.jooq.Table
 import org.jooq.impl.DSL
 import org.jooq.impl.SQLDataType
+import java.math.BigDecimal
+import java.time.OffsetDateTime
 
 private fun table(name: String): Table<*> = DSL.table(DSL.name(name))
 
@@ -15,8 +15,7 @@ private fun char(name: String): Field<String> = DSL.field(DSL.name(name), SQLDat
 
 private fun numeric(name: String): Field<BigDecimal> = DSL.field(DSL.name(name), SQLDataType.NUMERIC)
 
-private fun timestamp(name: String): Field<OffsetDateTime> =
-    DSL.field(DSL.name(name), SQLDataType.TIMESTAMPWITHTIMEZONE)
+private fun timestamp(name: String): Field<OffsetDateTime> = DSL.field(DSL.name(name), SQLDataType.TIMESTAMPWITHTIMEZONE)
 
 object OfbizTables {
     object SequenceValueItem {

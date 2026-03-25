@@ -28,24 +28,35 @@ test("salesperson can move an opportunity from creation to quote handoff", async
   await page.getByLabel("Quantity").fill("2");
   await page.getByLabel("Unit price").fill("24.50");
   await page.getByRole("button", { name: "Add line" }).click();
-  await page.getByLabel("Item description").nth(1).fill("Backup calibration pack");
+  await page
+    .getByLabel("Item description")
+    .nth(1)
+    .fill("Backup calibration pack");
   await page.getByLabel("Product").nth(1).fill("Micro Chrome Widget (WG-1111)");
   await page.getByLabel("Quantity").nth(1).fill("1");
   await page.getByLabel("Unit price").nth(1).fill("12.00");
   await page.getByRole("button", { name: "Save brief" }).click();
 
   await expect(page).toHaveURL(/\/leads\/.+/);
-  await expect(page.getByRole("button", { name: "Create Quote" })).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Create Quote" }),
+  ).toBeVisible();
 
   await page.getByRole("button", { name: "Create Quote" }).click();
   await expect(page).toHaveURL(/\/leads\/.+/);
   await expect(page.getByRole("link", { name: "Review quote" })).toBeVisible();
   await expect(page.getByText("This brief is locked")).toBeVisible();
-  await expect(page.getByRole("button", { name: "Create Draft Order" })).toHaveCount(0);
+  await expect(
+    page.getByRole("button", { name: "Create Draft Order" }),
+  ).toHaveCount(0);
 
   await page.getByRole("link", { name: "Review quote" }).click();
   await expect(page).toHaveURL(/\/quotes\/.+/);
   await expect(page.getByText("Quoted items")).toBeVisible();
-  await expect(page.getByRole("link", { name: "Open quote record" })).toBeVisible();
-  await expect(page.getByRole("button", { name: "Create Draft Order" })).toHaveCount(0);
+  await expect(
+    page.getByRole("link", { name: "Open quote record" }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Create Draft Order" }),
+  ).toHaveCount(0);
 });

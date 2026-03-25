@@ -8,7 +8,12 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { formatCurrency, getQuote, toOfbizUrl, totalFromItems } from "@/lib/leadflow";
+import {
+  formatCurrency,
+  getQuote,
+  toOfbizUrl,
+  totalFromItems,
+} from "@/lib/leadflow";
 
 type QuoteDetailPageProps = {
   params: Promise<{ quoteId: string }>;
@@ -31,7 +36,9 @@ export default async function QuoteDetailPage({
         <Card className="surface-panel">
           <CardHeader>
             <CardTitle>Quote summary</CardTitle>
-            <CardDescription>Pricing, status, and back-office follow-up links.</CardDescription>
+            <CardDescription>
+              Pricing, status, and back-office follow-up links.
+            </CardDescription>
           </CardHeader>
           <CardContent className="flex flex-col gap-4">
             <div className="flex items-center justify-between gap-3">
@@ -67,7 +74,9 @@ export default async function QuoteDetailPage({
               </Link>
               <a
                 className="rounded-full border border-border/80 bg-background px-4 py-2 font-medium hover:bg-accent"
-                href={toOfbizUrl(`/ordermgr/control/findquotes?quoteId=${quote.quoteId}`)}
+                href={toOfbizUrl(
+                  `/ordermgr/control/findquotes?quoteId=${quote.quoteId}`,
+                )}
                 rel="noreferrer"
                 target="_blank"
               >
@@ -80,15 +89,22 @@ export default async function QuoteDetailPage({
         <Card className="surface-panel">
           <CardHeader>
             <CardTitle>Quoted items</CardTitle>
-            <CardDescription>Customer-facing pricing lines included in this quote.</CardDescription>
+            <CardDescription>
+              Customer-facing pricing lines included in this quote.
+            </CardDescription>
           </CardHeader>
           <CardContent className="flex flex-col gap-3">
             {quote.items.map((item) => (
-              <div className="surface-muted flex flex-col gap-3 p-4" key={item.seqId}>
+              <div
+                className="surface-muted flex flex-col gap-3 p-4"
+                key={item.seqId}
+              >
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div className="space-y-1">
                     <p className="font-medium">
-                      {item.comments ?? item.productId ?? `Quote item ${item.seqId}`}
+                      {item.comments ??
+                        item.productId ??
+                        `Quote item ${item.seqId}`}
                     </p>
                     <p className="text-sm text-muted-foreground">
                       {item.productId ?? "Custom item"} · line {item.seqId}
