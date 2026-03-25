@@ -5,6 +5,7 @@ import com.example.leadflow.ofbiz.AuditStamp
 import com.example.leadflow.ofbiz.OfbizSequenceService
 import com.example.leadflow.ofbiz.OfbizTables
 import com.example.leadflow.shared.ConflictException
+import com.example.leadflow.shared.NotFoundException
 import com.example.leadflow.workflow.WorkflowReadRepository
 import java.math.BigDecimal
 import org.jooq.DSLContext
@@ -34,6 +35,8 @@ class QuoteWriteService(
 
     @Transactional
     fun createQuoteFromRequest(custRequestId: String): QuoteDetail {
+        lockRequest(custRequestId)
+
         val existingQuoteId = workflowReadRepository.findQuoteIdForRequest(custRequestId)
         if (existingQuoteId != null) {
             return workflowReadRepository.getQuote(existingQuoteId)
@@ -42,6 +45,7 @@ class QuoteWriteService(
         val stamp = AuditStamp()
         val request = workflowReadRepository.getRequest(custRequestId)
         val quoteId = sequenceService.nextId("Quote")
+        val requestTakerPartyId = resolveRequestTakerPartyId()
 
         dsl.insertInto(OfbizTables.Quote.TABLE)
             .set(OfbizTables.Quote.QUOTE_ID, quoteId)
@@ -64,7 +68,7 @@ class QuoteWriteService(
 
         dsl.insertInto(OfbizTables.QuoteRole.TABLE)
             .set(OfbizTables.QuoteRole.QUOTE_ID, quoteId)
-            .set(OfbizTables.QuoteRole.PARTY_ID, properties.createdByUserLoginId)
+            .set(OfbizTables.QuoteRole.PARTY_ID, requestTakerPartyId)
             .set(OfbizTables.QuoteRole.ROLE_TYPE_ID, "REQ_TAKER")
             .set(OfbizTables.QuoteRole.FROM_DATE, stamp.now)
             .set(OfbizTables.QuoteRole.LAST_UPDATED_STAMP, stamp.now)
@@ -122,4 +126,30 @@ class QuoteWriteService(
 
         return workflowReadRepository.getQuote(quoteId)
     }
+
+    private fun lockRequest(custRequestId: String) {
+        val locked =
+            dsl.resultQuery(
+                """
+                select cust_request_id
+                from cust_request
+                where cust_request_id = ?
+                for update
+                """,
+                custRequestId,
+            ).fetchOne(0, String::class.java)
+
+        if (locked == null) {
+            throw NotFoundException("Request $custRequestId was not found")
+        }
+    }
+
+    private fun resolveRequestTakerPartyId(): String =
+        dsl.select(OfbizTables.UserLogin.PARTY_ID)
+            .from(OfbizTables.UserLogin.TABLE)
+            .where(OfbizTables.UserLogin.USER_LOGIN_ID.eq(properties.createdByUserLoginId))
+            .fetchOne(OfbizTables.UserLogin.PARTY_ID)
+            ?: throw NotFoundException(
+                "User login ${properties.createdByUserLoginId} is not linked to a party and cannot create quote roles.",
+            )
 }

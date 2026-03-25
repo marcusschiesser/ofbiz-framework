@@ -144,6 +144,12 @@ object OfbizTables {
         val CREATED_TX_STAMP = timestamp("created_tx_stamp")
     }
 
+    object UserLogin {
+        val TABLE = table("user_login")
+        val USER_LOGIN_ID = varchar("user_login_id")
+        val PARTY_ID = varchar("party_id")
+    }
+
     object CustRequest {
         val TABLE = table("cust_request")
         val CUST_REQUEST_ID = varchar("cust_request_id")
