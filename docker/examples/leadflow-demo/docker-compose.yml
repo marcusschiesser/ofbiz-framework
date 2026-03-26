@@ -1,0 +1,87 @@
+#####################################################################
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+#####################################################################
+
+services:
+  db:
+    image: postgres:13
+    mem_limit: 300M
+    memswap_limit: 300M
+    cpu_shares: 200
+    restart: "no"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+    volumes:
+      - ../postgres-demo/postgres-initdb.d:/docker-entrypoint-initdb.d
+    env_file:
+      - ../postgres-demo/postgres.env
+      - ../postgres-demo/ofbiz-postgres.env
+
+  ofbiz:
+    build:
+      context: ../../..
+      target: runtime
+    image: ofbiz-docker
+    mem_limit: 1600M
+    memswap_limit: 1600M
+    cpu_shares: 200
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - 8443:8443
+    volumes:
+      - ../postgres-demo/after-config-applied.d:/docker-entrypoint-hooks/after-config-applied.d
+      - ./logs/ofbiz:/ofbiz/runtime/logs
+    env_file:
+      - ../postgres-demo/ofbiz-postgres.env
+    environment:
+      OFBIZ_DATA_LOAD: demo
+      OFBIZ_HOST: localhost
+      OFBIZ_CONTENT_URL_PREFIX: https://localhost:8443
+
+  backend:
+    build:
+      context: ../../../modern/backend
+    depends_on:
+      db:
+        condition: service_healthy
+      ofbiz:
+        condition: service_started
+    ports:
+      - 8081:8081
+    env_file:
+      - ../postgres-demo/ofbiz-postgres.env
+    environment:
+      SERVER_PORT: 8081
+      LEADFLOW_DB_DRIVER: org.postgresql.Driver
+      LEADFLOW_DB_SCHEMA: public
+      LEADFLOW_CREATED_BY_USER_LOGIN_ID: admin
+      LEADFLOW_LEAD_OWNER_PARTY_ID: DemoLeadOwner
+      LEADFLOW_OFBIZ_BASE_URL: https://ofbiz:8443
+    entrypoint:
+      - /bin/sh
+      - -c
+      - >
+        exec java -jar /app/app.jar
+        --spring.datasource.url=jdbc:postgresql://db:5432/$$OFBIZ_POSTGRES_OFBIZ_DB
+        --spring.datasource.username=$$OFBIZ_POSTGRES_OFBIZ_USER
+        --spring.datasource.password=$$OFBIZ_POSTGRES_OFBIZ_PASSWORD
