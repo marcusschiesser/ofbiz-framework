@@ -150,14 +150,14 @@ class LeadCaptureBaselineTests extends AbstractLeadCaptureTestCase {
                 [
                         [
                                 description: 'Round gizmo package',
-                                quantity: new BigDecimal('2'),
-                                maximumAmount: new BigDecimal('49.00'),
+                                quantity: 2G,
+                                maximumAmount: 49.00G,
                                 story: 'Primary request line'
                         ],
                         [
                                 description: 'Backup calibration pack',
-                                quantity: new BigDecimal('1'),
-                                maximumAmount: new BigDecimal('12.00'),
+                                quantity: 1G,
+                                maximumAmount: 12.00G,
                                 story: 'Secondary request line'
                         ]
                 ]
@@ -179,8 +179,12 @@ class LeadCaptureBaselineTests extends AbstractLeadCaptureTestCase {
                 ['ACCOUNT_LEAD', 'LEAD'],
                 [
                         new RequestItemSnapshot(null, 'Customer needs pricing for warehouse equipment.', null, null, null, 'CRQ_SUBMITTED'),
-                        new RequestItemSnapshot(null, 'Round gizmo package', new BigDecimal('2'), new BigDecimal('49'), 'Primary request line', 'CRQ_SUBMITTED'),
-                        new RequestItemSnapshot(null, 'Backup calibration pack', BigDecimal.ONE, new BigDecimal('12'), 'Secondary request line', 'CRQ_SUBMITTED')
+                        new RequestItemSnapshot(
+                                null, 'Round gizmo package', 2G, 49G, 'Primary request line', 'CRQ_SUBMITTED'
+                        ),
+                        new RequestItemSnapshot(
+                                null, 'Backup calibration pack', 1G, 12G, 'Secondary request line', 'CRQ_SUBMITTED'
+                        )
                 ]
         )
     }
@@ -202,8 +206,8 @@ class LeadCaptureBaselineTests extends AbstractLeadCaptureTestCase {
                 'Initial request body.',
                 [[
                          description: 'Initial line',
-                         quantity: new BigDecimal('2'),
-                         maximumAmount: new BigDecimal('49.00'),
+                         quantity: 2G,
+                         maximumAmount: 49.00G,
                          story: 'Initial story'
                  ]]
         )
@@ -225,8 +229,8 @@ class LeadCaptureBaselineTests extends AbstractLeadCaptureTestCase {
                 custRequestId: custRequestId,
                 custRequestItemSeqId: itemSeqId,
                 description: 'Updated line',
-                quantity: new BigDecimal('3'),
-                maximumAmount: new BigDecimal('36.00'),
+                quantity: 3G,
+                maximumAmount: 36.00G,
                 statusId: 'CRQ_SUBMITTED',
                 userLogin: lookupUserLogin()
         ])
@@ -245,8 +249,9 @@ class LeadCaptureBaselineTests extends AbstractLeadCaptureTestCase {
                 ['ACCOUNT_LEAD', 'LEAD'],
                 [
                         new RequestItemSnapshot(null, 'Initial request body.', null, null, 'Updated story', 'CRQ_SUBMITTED'),
-                        new RequestItemSnapshot(null, 'Updated line', new BigDecimal('3'), new BigDecimal('36'), 'Initial story', 'CRQ_SUBMITTED')
+                        new RequestItemSnapshot(null, 'Updated line', 3G, 36G, 'Initial story', 'CRQ_SUBMITTED')
                 ]
         )
     }
+
 }

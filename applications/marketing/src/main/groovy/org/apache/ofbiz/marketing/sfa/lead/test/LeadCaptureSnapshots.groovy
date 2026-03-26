@@ -25,28 +25,35 @@ import org.apache.ofbiz.entity.util.EntityQuery
 
 @Canonical
 class RelationshipSnapshot {
+
     String partyIdFrom
     String relationshipTypeId
+
 }
 
 @Canonical
 class EmploymentSnapshot {
+
     String companyName
     String positionTitle
+
 }
 
 @Canonical
 class RequestItemSnapshot {
+
     String productId
     String description
     BigDecimal quantity
     BigDecimal maximumAmount
     String story
     String statusId
+
 }
 
 @Canonical
 class LeadSnapshot {
+
     String firstName
     String lastName
     String statusId
@@ -56,33 +63,40 @@ class LeadSnapshot {
     List<String> statusHistory
     List<RelationshipSnapshot> ownerRelationships
     List<EmploymentSnapshot> companyEmployment
+
 }
 
 @Canonical
 class CompanySnapshot {
+
     String groupName
     String statusId
     List<String> roles
     List<String> dataSourceIds
     List<String> statusHistory
     List<RelationshipSnapshot> ownerRelationships
+
 }
 
 @Canonical
 class RequestSnapshot {
+
     String custRequestName
     String description
     String statusId
     List<String> statusHistory
     List<String> partyRoles
     List<RequestItemSnapshot> items
+
 }
 
 @Canonical
 class LeadCaptureSnapshot {
+
     LeadSnapshot lead
     CompanySnapshot company
     RequestSnapshot request
+
 }
 
 class LeadCaptureSnapshotReader {
@@ -122,7 +136,9 @@ class LeadCaptureSnapshotReader {
                 .collect { GenericValue rel ->
                     new RelationshipSnapshot(rel.partyIdFrom as String, rel.partyRelationshipTypeId as String)
                 }
-                .sort { RelationshipSnapshot left, RelationshipSnapshot right -> left.partyIdFrom <=> right.partyIdFrom } as List<RelationshipSnapshot>
+                .sort { RelationshipSnapshot left, RelationshipSnapshot right ->
+                    left.partyIdFrom <=> right.partyIdFrom
+                } as List<RelationshipSnapshot>
 
         List<EmploymentSnapshot> companyEmployment = query(delegator, 'PartyRelationship', [
                 partyIdTo: partyId,
@@ -135,7 +151,9 @@ class LeadCaptureSnapshotReader {
                     GenericValue company = query(delegator, 'PartyGroup', [partyId: rel.partyIdFrom]).queryOne()
                     new EmploymentSnapshot(company?.groupName as String, rel.positionTitle as String)
                 }
-                .sort { EmploymentSnapshot left, EmploymentSnapshot right -> (left.companyName ?: '') <=> (right.companyName ?: '') } as List<EmploymentSnapshot>
+                .sort { EmploymentSnapshot left, EmploymentSnapshot right ->
+                    (left.companyName ?: '') <=> (right.companyName ?: '')
+                } as List<EmploymentSnapshot>
 
         List<String> dataSourceIds = query(delegator, 'PartyDataSource', [partyId: partyId]).queryList()*.dataSourceId
                 .findAll { it != null }
@@ -180,7 +198,9 @@ class LeadCaptureSnapshotReader {
                 .collect { GenericValue rel ->
                     new RelationshipSnapshot(rel.partyIdFrom as String, rel.partyRelationshipTypeId as String)
                 }
-                .sort { RelationshipSnapshot left, RelationshipSnapshot right -> left.partyIdFrom <=> right.partyIdFrom } as List<RelationshipSnapshot>
+                .sort { RelationshipSnapshot left, RelationshipSnapshot right ->
+                    left.partyIdFrom <=> right.partyIdFrom
+                } as List<RelationshipSnapshot>
 
         return new CompanySnapshot(
                 partyGroup.groupName as String,
@@ -253,4 +273,5 @@ class LeadCaptureSnapshotReader {
         }
         return new BigDecimal(value.toString()).stripTrailingZeros()
     }
+
 }

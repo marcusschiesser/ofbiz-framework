@@ -21,30 +21,19 @@ package org.apache.ofbiz.marketing.sfa.lead.test
 import org.apache.ofbiz.service.ServiceUtil
 
 class LeadCaptureParityTests extends AbstractLeadCaptureTestCase {
+
     private LeadflowBackendHttpClient backendClient
 
     LeadCaptureParityTests(String name) {
         super(name)
     }
 
-    @Override
-    protected void setUp() throws Exception {
-        super.setUp()
-        backendClient = new LeadflowBackendHttpClient(LeadflowBackendTestServer.ensureStarted())
-    }
-
-    @Override
-    protected void tearDown() throws Exception {
-        backendClient = null
-        super.tearDown()
-    }
-
     void testCreateLeadPersonOnlyParity() {
         String suffix = uniqueSuffix()
         Map createPayload = [
                 firstName: 'Parity',
-                lastName : "Person${suffix}",
-                email    : "lead-parity-person-${suffix}@example.com"
+                lastName: "Person${suffix}",
+                email: "lead-parity-person-${suffix}@example.com"
         ]
 
         Map legacyResult = createLead(
@@ -64,9 +53,9 @@ class LeadCaptureParityTests extends AbstractLeadCaptureTestCase {
     void testCreateLeadWithCompanyParity() {
         String suffix = uniqueSuffix()
         Map createPayload = [
-                firstName  : 'Parity',
-                lastName   : "Company${suffix}",
-                email      : "lead-parity-company-${suffix}@example.com",
+                firstName: 'Parity',
+                lastName: "Company${suffix}",
+                email: "lead-parity-company-${suffix}@example.com",
                 companyName: "Parity Company ${suffix}"
         ]
 
@@ -88,9 +77,9 @@ class LeadCaptureParityTests extends AbstractLeadCaptureTestCase {
     void testCreateLeadWithDataSourceParity() {
         String suffix = uniqueSuffix()
         Map createPayload = [
-                firstName   : 'Parity',
-                lastName    : "Source${suffix}",
-                email       : "lead-parity-source-${suffix}@example.com",
+                firstName: 'Parity',
+                lastName: "Source${suffix}",
+                email: "lead-parity-source-${suffix}@example.com",
                 dataSourceId: 'WEB_SITE'
         ]
 
@@ -112,11 +101,11 @@ class LeadCaptureParityTests extends AbstractLeadCaptureTestCase {
     void testCreateLeadWithEmploymentTitleParity() {
         String suffix = uniqueSuffix()
         Map createPayload = [
-                firstName  : 'Parity',
-                lastName   : "Title${suffix}",
-                email      : "lead-parity-title-${suffix}@example.com",
+                firstName: 'Parity',
+                lastName: "Title${suffix}",
+                email: "lead-parity-title-${suffix}@example.com",
                 companyName: "Parity Title Co ${suffix}",
-                title      : 'Procurement Lead'
+                title: 'Procurement Lead'
         ]
 
         Map legacyResult = createLead(
@@ -138,26 +127,26 @@ class LeadCaptureParityTests extends AbstractLeadCaptureTestCase {
     void testCreateFirstRequestParity() {
         String suffix = uniqueSuffix()
         Map leadPayload = [
-                firstName  : 'Request',
-                lastName   : "Create${suffix}",
-                email      : "lead-request-create-${suffix}@example.com",
+                firstName: 'Request',
+                lastName: "Create${suffix}",
+                email: "lead-request-create-${suffix}@example.com",
                 companyName: "Request Create Co ${suffix}"
         ]
         Map requestPayload = [
-                name       : "Parity Request ${suffix}",
+                name: "Parity Request ${suffix}",
                 description: 'Customer needs pricing for warehouse equipment.',
-                lines      : [
+                lines: [
                         [
                                 description: 'Round gizmo package',
-                                quantity   : '2',
-                                unitPrice  : '24.50',
-                                story      : 'Primary request line'
+                                quantity: '2',
+                                unitPrice: '24.50',
+                                story: 'Primary request line'
                         ],
                         [
                                 description: 'Backup calibration pack',
-                                quantity   : '1',
-                                unitPrice  : '12.00',
-                                story      : 'Secondary request line'
+                                quantity: '1',
+                                unitPrice: '12.00',
+                                story: 'Secondary request line'
                         ]
                 ]
         ]
@@ -177,14 +166,14 @@ class LeadCaptureParityTests extends AbstractLeadCaptureTestCase {
                 [
                         [
                                 description: 'Round gizmo package',
-                                quantity: new BigDecimal('2'),
-                                maximumAmount: new BigDecimal('49.00'),
+                                quantity: 2G,
+                                maximumAmount: 49.00G,
                                 story: 'Primary request line'
                         ],
                         [
                                 description: 'Backup calibration pack',
-                                quantity: new BigDecimal('1'),
-                                maximumAmount: new BigDecimal('12.00'),
+                                quantity: 1G,
+                                maximumAmount: 12.00G,
                                 story: 'Secondary request line'
                         ]
                 ]
@@ -210,29 +199,29 @@ class LeadCaptureParityTests extends AbstractLeadCaptureTestCase {
     void testRewriteRequestBeforeQuoteParity() {
         String suffix = uniqueSuffix()
         Map leadPayload = [
-                firstName  : 'Request',
-                lastName   : "Update${suffix}",
-                email      : "lead-request-update-${suffix}@example.com",
+                firstName: 'Request',
+                lastName: "Update${suffix}",
+                email: "lead-request-update-${suffix}@example.com",
                 companyName: "Request Update Co ${suffix}"
         ]
         Map initialRequestPayload = [
-                name       : "Parity Request ${suffix}",
+                name: "Parity Request ${suffix}",
                 description: 'Initial request body.',
-                lines      : [[
-                                      description: 'Initial line',
-                                      quantity   : '2',
-                                      unitPrice  : '24.50',
-                                      story      : 'Initial story'
+                lines: [[
+                        description: 'Initial line',
+                        quantity: '2',
+                        unitPrice: '24.50',
+                        story: 'Initial story'
                               ]]
         ]
         Map updatedRequestPayload = [
-                name       : "Parity Request ${suffix} Revised",
+                name: "Parity Request ${suffix} Revised",
                 description: 'Updated request body.',
-                story      : 'Updated story',
-                lines      : [[
-                                      description: 'Updated line',
-                                      quantity   : '3',
-                                      unitPrice  : '12.00'
+                story: 'Updated story',
+                lines: [[
+                        description: 'Updated line',
+                        quantity: '3',
+                        unitPrice: '12.00'
                               ]]
         ]
 
@@ -250,8 +239,8 @@ class LeadCaptureParityTests extends AbstractLeadCaptureTestCase {
                 initialRequestPayload.description as String,
                 [[
                          description: 'Initial line',
-                         quantity: new BigDecimal('2'),
-                         maximumAmount: new BigDecimal('49.00'),
+                         quantity: 2G,
+                         maximumAmount: 49.00G,
                          story: 'Initial story'
                  ]]
         )
@@ -273,8 +262,8 @@ class LeadCaptureParityTests extends AbstractLeadCaptureTestCase {
                 custRequestId: legacyRequestId,
                 custRequestItemSeqId: legacyItemSeqId,
                 description: 'Updated line',
-                quantity: new BigDecimal('3'),
-                maximumAmount: new BigDecimal('36.00'),
+                quantity: 3G,
+                maximumAmount: 36.00G,
                 statusId: 'CRQ_SUBMITTED',
                 userLogin: lookupUserLogin()
         ])
@@ -297,4 +286,17 @@ class LeadCaptureParityTests extends AbstractLeadCaptureTestCase {
 
         assert modernSnapshot == legacySnapshot
     }
+
+    @Override
+    protected void setUp() throws Exception {
+        super.setUp()
+        backendClient = new LeadflowBackendHttpClient(LeadflowBackendTestServer.ensureStarted())
+    }
+
+    @Override
+    protected void tearDown() throws Exception {
+        backendClient = null
+        super.tearDown()
+    }
+
 }

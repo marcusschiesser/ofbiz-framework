@@ -21,19 +21,16 @@ package org.apache.ofbiz.marketing.sfa.lead.test
 import groovy.json.JsonOutput
 import groovy.json.JsonSlurper
 
-import java.net.ServerSocket
-import java.net.URI
-import java.net.URLClassLoader
 import java.net.http.HttpClient
 import java.net.http.HttpRequest
 import java.net.http.HttpResponse
 import java.nio.file.Files
 import java.nio.file.Path
 import java.time.Duration
-import java.util.Locale
 import java.util.concurrent.TimeUnit
 
 class LeadflowBackendHttpClient {
+
     private final HttpClient httpClient = HttpClient.newBuilder()
             .connectTimeout(Duration.ofSeconds(10))
             .build()
@@ -68,12 +65,15 @@ class LeadflowBackendHttpClient {
         }
 
         HttpResponse<String> response = httpClient.send(builder.build(), HttpResponse.BodyHandlers.ofString())
-        assert response.statusCode() in 200..299: "Expected ${method} ${path} to succeed but received ${response.statusCode()} with body ${response.body()}"
+        String message = "Expected ${method} ${path} to succeed but received ${response.statusCode()} with body ${response.body()}"
+        assert response.statusCode() in 200..299: message
         return (Map) jsonSlurper.parseText(response.body())
     }
+
 }
 
 class LeadflowBackendTestServer {
+
     private static final Object LOCK = new Object()
     private static volatile Object applicationContext
     private static volatile URLClassLoader applicationClassLoader
@@ -90,7 +90,7 @@ class LeadflowBackendTestServer {
                 port = reservePort()
                 Map<String, String> previous = applyProperties()
                 try {
-                    applicationClassLoader = new LeadflowBackendClassLoader(runtimeClasspathUrls(), LeadflowBackendTestServer.class.classLoader)
+                    applicationClassLoader = new LeadflowBackendClassLoader(runtimeClasspathUrls(), LeadflowBackendTestServer.classLoader)
                     Thread thread = Thread.currentThread()
                     ClassLoader previousLoader = thread.contextClassLoader
                     thread.contextClassLoader = applicationClassLoader
@@ -128,25 +128,29 @@ class LeadflowBackendTestServer {
 
     private static Map<String, String> applyProperties() {
         Map<String, String> previous = [
-                SERVER_PORT                     : System.getProperty('SERVER_PORT'),
-                LEADFLOW_DB_URL                 : System.getProperty('LEADFLOW_DB_URL'),
-                LEADFLOW_DB_DRIVER              : System.getProperty('LEADFLOW_DB_DRIVER'),
+                SERVER_PORT: System.getProperty('SERVER_PORT'),
+                LEADFLOW_DB_URL: System.getProperty('LEADFLOW_DB_URL'),
+                LEADFLOW_DB_DRIVER: System.getProperty('LEADFLOW_DB_DRIVER'),
                 LEADFLOW_CREATED_BY_USER_LOGIN_ID: System.getProperty('LEADFLOW_CREATED_BY_USER_LOGIN_ID'),
-                LEADFLOW_LEAD_OWNER_PARTY_ID    : System.getProperty('LEADFLOW_LEAD_OWNER_PARTY_ID'),
+                LEADFLOW_LEAD_OWNER_PARTY_ID: System.getProperty('LEADFLOW_LEAD_OWNER_PARTY_ID'),
                 'org.springframework.boot.logging.LoggingSystem': System.getProperty('org.springframework.boot.logging.LoggingSystem'),
-                'server.error.include-message'  : System.getProperty('server.error.include-message'),
+                'server.error.include-message': System.getProperty('server.error.include-message'),
                 'server.error.include-exception': System.getProperty('server.error.include-exception'),
                 'server.error.include-stacktrace': System.getProperty('server.error.include-stacktrace')
         ]
-        System.setProperty('SERVER_PORT', port.toString())
-        System.setProperty('LEADFLOW_DB_URL', 'jdbc:derby:ofbiz')
-        System.setProperty('LEADFLOW_DB_DRIVER', 'org.apache.derby.jdbc.EmbeddedDriver')
-        System.setProperty('LEADFLOW_CREATED_BY_USER_LOGIN_ID', 'system')
-        System.setProperty('LEADFLOW_LEAD_OWNER_PARTY_ID', 'LeadParitySystem')
-        System.setProperty('org.springframework.boot.logging.LoggingSystem', 'none')
-        System.setProperty('server.error.include-message', 'always')
-        System.setProperty('server.error.include-exception', 'true')
-        System.setProperty('server.error.include-stacktrace', 'always')
+        [
+                SERVER_PORT: port.toString(),
+                LEADFLOW_DB_URL: 'jdbc:derby:ofbiz',
+                LEADFLOW_DB_DRIVER: 'org.apache.derby.jdbc.EmbeddedDriver',
+                LEADFLOW_CREATED_BY_USER_LOGIN_ID: 'system',
+                LEADFLOW_LEAD_OWNER_PARTY_ID: 'LeadParitySystem',
+                'org.springframework.boot.logging.LoggingSystem': 'none',
+                'server.error.include-message': 'always',
+                'server.error.include-exception': 'true',
+                'server.error.include-stacktrace': 'always'
+        ].each { String key, String value ->
+            System.setProperty(key, value)
+        }
         return previous
     }
 
@@ -222,9 +226,11 @@ class LeadflowBackendTestServer {
     private static boolean isWindows() {
         return System.getProperty('os.name', '').toLowerCase(Locale.ROOT).contains('win')
     }
+
 }
 
 class LeadflowBackendClassLoader extends URLClassLoader {
+
     private static final List<String> CHILD_FIRST_PREFIXES = [
             'com.example.leadflow.',
             'org.springframework.',
@@ -270,4 +276,5 @@ class LeadflowBackendClassLoader extends URLClassLoader {
         }
         return false
     }
+
 }
