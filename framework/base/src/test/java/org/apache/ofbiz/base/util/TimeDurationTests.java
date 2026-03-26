@@ -25,10 +25,11 @@ import static org.junit.Assert.assertNotSame;
 import org.junit.Test;
 
 import com.ibm.icu.util.Calendar;
+import com.ibm.icu.util.GregorianCalendar;
 import com.ibm.icu.util.TimeZone;
 
 public class TimeDurationTests {
-    private static final Calendar ZERO = Calendar.getInstance(TimeZone.getTimeZone("GMT"));
+    private static final Calendar ZERO = new GregorianCalendar(TimeZone.getTimeZone("GMT"));
 
     static {
         ZERO.clear();
@@ -160,7 +161,7 @@ public class TimeDurationTests {
 
     @Test
     public void testDuration() throws Exception {
-        Calendar now = Calendar.getInstance();
+        Calendar now = new GregorianCalendar();
         TimeDuration zeroDuration = TimeDuration.ZERO_TIME_DURATION;
         assertFalse("zero equals null", zeroDuration.equals(null));
         Calendar newTime = (Calendar) now.clone();
@@ -185,7 +186,7 @@ public class TimeDurationTests {
         assertDuration("day", DateTuple.of(0, 0, 1, 0, 0, 0, 0));
         assertDuration("month", DateTuple.of(0, 1, 0, 0, 0, 0, 0));
         assertDuration("year", DateTuple.of(1, 0, 0, 0, 0, 0, 0));
-        Calendar start = new com.ibm.icu.util.GregorianCalendar(1967, 1, 1, 0, 0, 0);
+        Calendar start = new GregorianCalendar(1967, 1, 1, 0, 0, 0);
         start.set(Calendar.MILLISECOND, 0);
         Calendar end = (Calendar) start.clone();
         end.add(Calendar.MILLISECOND, 1);
