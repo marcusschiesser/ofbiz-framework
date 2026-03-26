@@ -229,8 +229,8 @@ class LeadCaptureBaselineTests extends AbstractLeadCaptureTestCase {
                 custRequestId: custRequestId,
                 custRequestItemSeqId: itemSeqId,
                 description: 'Updated line',
-                quantity: 3G,
-                maximumAmount: 36.00G,
+                quantity: toBigDecimal(3),
+                maximumAmount: toBigDecimal(36.00G),
                 statusId: 'CRQ_SUBMITTED',
                 userLogin: lookupUserLogin()
         ])
