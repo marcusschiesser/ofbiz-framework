@@ -18,6 +18,8 @@
  */
 package org.apache.ofbiz.marketing.sfa.lead.test
 
+import java.math.BigDecimal
+
 import org.apache.ofbiz.entity.condition.EntityCondition
 import org.apache.ofbiz.entity.condition.EntityOperator
 import org.apache.ofbiz.entity.GenericValue
@@ -100,8 +102,8 @@ class AbstractLeadCaptureTestCase extends OFBizTestCase {
                     custRequestId: custRequestId,
                     description: item.description,
                     story: item.story,
-                    quantity: item.quantity,
-                    maximumAmount: item.maximumAmount,
+                    quantity: toBigDecimal(item.quantity),
+                    maximumAmount: toBigDecimal(item.maximumAmount),
                     statusId: 'CRQ_SUBMITTED',
                     userLogin: lookupUserLogin()
             ])
@@ -110,6 +112,16 @@ class AbstractLeadCaptureTestCase extends OFBizTestCase {
         }
 
         return [custRequestId: custRequestId, itemSeqIds: itemSeqIds]
+    }
+
+    protected static BigDecimal toBigDecimal(Object value) {
+        if (value == null) {
+            return null
+        }
+        if (value instanceof BigDecimal) {
+            return value
+        }
+        return new BigDecimal(value.toString())
     }
 
     protected GenericValue lookupUserLogin() {
