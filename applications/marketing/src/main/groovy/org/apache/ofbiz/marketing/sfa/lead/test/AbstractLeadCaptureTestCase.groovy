@@ -26,11 +26,16 @@ import org.apache.ofbiz.security.SecurityFactory
 import org.apache.ofbiz.service.ServiceUtil
 import org.apache.ofbiz.service.testtools.OFBizTestCase
 
-abstract class AbstractLeadCaptureTestCase extends OFBizTestCase {
+class AbstractLeadCaptureTestCase extends OFBizTestCase {
+
     protected final LeadCaptureSnapshotReader snapshotReader = new LeadCaptureSnapshotReader()
 
     protected AbstractLeadCaptureTestCase(String name) {
         super(name)
+    }
+
+    protected static String uniqueSuffix() {
+        return Long.toString(System.nanoTime()).takeRight(10)
     }
 
     protected LeadCaptureSnapshot snapshot(
@@ -127,7 +132,4 @@ abstract class AbstractLeadCaptureTestCase extends OFBizTestCase {
         return lookupUserLogin().partyId as String
     }
 
-    protected static String uniqueSuffix() {
-        return Long.toString(System.nanoTime()).takeRight(10)
-    }
 }
