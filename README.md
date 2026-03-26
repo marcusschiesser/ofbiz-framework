@@ -26,22 +26,26 @@ The repo now also contains a new Kotlin Spring Boot 4 backend in [modern/backend
 - `GET /api/opportunities/{partyId}`
 
 By default the backend listens on `http://localhost:8081` and connects to the OFBiz Derby database at `runtime/data/derby/ofbiz`.
+For local non-Docker runs, that Derby configuration remains the default.
 
 ### Start the Backend
 
-Start OFBiz first so the Derby database exists and is ready, then start the backend from the repository root:
+Start the full stack from the repository root:
 
 ```bash
-modern/backend/gradlew -p modern/backend bootRun
+docker compose -f docker/examples/leadflow-demo/docker-compose.yml up --build
 ```
 
-Useful environment variables:
+This starts PostgreSQL, OFBiz with demo data, and the Spring Boot backend together.
 
-- `SERVER_PORT`: backend HTTP port, default `8081`
-- `LEADFLOW_DB_URL`: JDBC URL, default `jdbc:derby:../runtime/data/derby/ofbiz;create=false`
-- `LEADFLOW_DB_DRIVER`: JDBC driver, default `org.apache.derby.jdbc.EmbeddedDriver`
-- `LEADFLOW_DB_SCHEMA`: schema, default `OFBIZ`
-- `LEADFLOW_OFBIZ_BASE_URL`: OFBiz base URL used by compatibility checks, default `https://localhost:8443`
+Once startup completes, use:
+
+- OFBiz: [https://localhost:8443/partymgr](https://localhost:8443/partymgr)
+- Backend: [http://localhost:8081/api/opportunities](http://localhost:8081/api/opportunities)
+
+OFBiz demo login:
+
+- `admin` / `ofbiz`
 
 ### Use the API
 
