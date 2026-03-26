@@ -17,6 +17,7 @@ runtime/data/utilcache.*
 runtime/catalina/work/*
 runtime/tempfiles/*
 runtime/indexes/products/
+docker/examples/postgres-demo/logs/
 !runtime/tempfiles/README
 changelog
 .classpath

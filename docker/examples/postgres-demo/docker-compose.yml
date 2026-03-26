@@ -17,8 +17,6 @@
 # under the License.
 #####################################################################
 
-version: "2.4"
-
 services:
   db:
     image: postgres:13
@@ -26,6 +24,11 @@ services:
     memswap_limit: 300M
     cpu_shares: 200
     restart: "no"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
     volumes:
       - ./postgres-initdb.d:/docker-entrypoint-initdb.d
     env_file:
@@ -33,10 +36,16 @@ services:
       - ofbiz-postgres.env
 
   ofbiz:
+    build:
+      context: ../../..
+      target: runtime
     image: ofbiz-docker
     mem_limit: 1600M
     memswap_limit: 1600M
     cpu_shares: 200
+    depends_on:
+      db:
+        condition: service_healthy
     ports:
       - 8443:8443
     volumes:
@@ -49,5 +58,5 @@ services:
       - ofbiz-postgres.env
     environment:
       OFBIZ_DATA_LOAD: demo
-      OFBIZ_HOST: example.internal
-      OFBIZ_CONTENT_URL_PREFIX: https://example.internal:8443
+      OFBIZ_HOST: localhost
+      OFBIZ_CONTENT_URL_PREFIX: https://localhost:8443
