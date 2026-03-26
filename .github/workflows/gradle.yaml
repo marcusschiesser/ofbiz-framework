@@ -53,13 +53,22 @@ jobs:
         cache: 'gradle'
 
     - name: Grant execute permission for gradlew and pullAllPluginsSource.sh
-      run: chmod +x gradlew pullAllPluginsSource.sh
+      run: chmod +x gradlew pullAllPluginsSource.sh modern/backend/gradlew
 
     - name: Load all plugins
       run: ./pullAllPluginsSource.sh
 
     - name: Build with Gradle
       run: ./gradlew check javadoc
+
+    - name: Run OFBiz lead capture baseline suite
+      run: ./gradlew "ofbiz --test component=marketing --test suitename=leadcapturebaselinetests"
+
+    - name: Run modern backend tests
+      run: modern/backend/gradlew -p modern/backend test
+
+    - name: Run OFBiz lead capture parity suite
+      run: ./gradlew "ofbiz --test component=marketing --test suitename=leadcaptureparitytests"
 
 # Below does not work, see see https://lists.apache.org/thread/80wzf4kclfk5nh2fss56jd6otf7y4n2f
 # BuildBot does it anyway

@@ -35,6 +35,8 @@ under the License.
 
     <!-- test suite -->
     <test-suite loader="main" location="testdef/MarketingTests.xml"/>
+    <test-suite loader="main" location="testdef/LeadCaptureBaselineTests.xml"/>
+    <test-suite loader="main" location="testdef/LeadCaptureParityTests.xml"/>
 
     <webapp name="marketing"
         title="Marketing"
@@ -53,4 +55,3 @@ under the License.
         app-shortcut-screen="component://marketing/widget/sfa/CommonScreens.xml#ShortcutApp"
         mount-point="/sfa"/>
 </ofbiz-component>
-
