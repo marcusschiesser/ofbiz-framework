@@ -1,0 +1,30 @@
+server:
+  port: ${SERVER_PORT:8081}
+
+spring:
+  application:
+    name: leadflow-backend
+  datasource:
+    url: ${LEADFLOW_DB_URL:jdbc:derby:../runtime/data/derby/ofbiz;create=false}
+    username: ${LEADFLOW_DB_USERNAME:}
+    password: ${LEADFLOW_DB_PASSWORD:}
+    driver-class-name: ${LEADFLOW_DB_DRIVER:org.apache.derby.jdbc.EmbeddedDriver}
+    hikari:
+      schema: ${LEADFLOW_DB_SCHEMA:OFBIZ}
+  jackson:
+    default-property-inclusion: non_null
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+
+leadflow:
+  ofbiz:
+    base-url: ${LEADFLOW_OFBIZ_BASE_URL:https://localhost:8443}
+    created-by-user-login-id: ${LEADFLOW_CREATED_BY_USER_LOGIN_ID:system}
+    lead-owner-party-id: ${LEADFLOW_LEAD_OWNER_PARTY_ID:LeadParitySystem}
+    currency-uom-id: ${LEADFLOW_CURRENCY_UOM_ID:USD}
+    default-request-type-id: ${LEADFLOW_REQUEST_TYPE_ID:RF_QUOTE}
+    default-request-status-id: ${LEADFLOW_REQUEST_STATUS_ID:CRQ_SUBMITTED}

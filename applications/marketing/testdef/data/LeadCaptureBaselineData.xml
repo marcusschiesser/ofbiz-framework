@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+<entity-engine-xml>
+    <RoleType roleTypeId="_NA_" description="Not Applicable" hasTable="N"/>
+    <ContactMechPurposeType contactMechPurposeTypeId="PRIMARY_EMAIL" description="Primary Email Address" hasTable="N"/>
+    <ContactMechType contactMechTypeId="ELECTRONIC_ADDRESS" description="Electronic Address" hasTable="N"/>
+    <ContactMechType contactMechTypeId="EMAIL_ADDRESS" description="Email Address" hasTable="N" parentTypeId="ELECTRONIC_ADDRESS"/>
+    <ContactMechTypePurpose contactMechPurposeTypeId="PRIMARY_EMAIL" contactMechTypeId="EMAIL_ADDRESS"/>
+
+    <RoleType roleTypeId="OWNER" description="Owner" hasTable="N"/>
+    <RoleType roleTypeId="ACCOUNT_LEAD" description="Account Lead" hasTable="N"/>
+    <RoleType roleTypeId="LEAD" description="Lead" hasTable="N"/>
+
+    <SecurityPermission permissionId="PARTYMGR_ADMIN" description="All operations in the Party Manager."/>
+    <SecurityPermission permissionId="ORDERMGR_CRQ_ADMIN" description="All operations related to customer requests in the Order Manager."/>
+    <SecurityPermission permissionId="MARKETING_ADMIN" description="All operations in the Marketing Manager."/>
+    <SecurityPermission permissionId="SFA_ADMIN" description="All operations in the SFA Manager."/>
+    <SecurityGroupPermission groupId="SUPER" permissionId="PARTYMGR_ADMIN" fromDate="2001-01-01 12:00:00.0"/>
+    <SecurityGroupPermission groupId="SUPER" permissionId="ORDERMGR_CRQ_ADMIN" fromDate="2001-01-01 12:00:00.0"/>
+    <SecurityGroupPermission groupId="SUPER" permissionId="MARKETING_ADMIN" fromDate="2001-01-01 12:00:00.0"/>
+    <SecurityGroupPermission groupId="SUPER" permissionId="SFA_ADMIN" fromDate="2001-01-01 12:00:00.0"/>
+
+    <PartyRelationshipType partyRelationshipTypeId="LEAD_OWNER" partyRelationshipName="Lead Owned by" hasTable="N"/>
+    <PartyRelationshipType partyRelationshipTypeId="EMPLOYMENT" partyRelationshipName="Employment" hasTable="Y"/>
+
+    <PartyType partyTypeId="PERSON" description="Person" hasTable="Y"/>
+    <PartyType partyTypeId="PARTY_GROUP" description="Party Group" hasTable="Y"/>
+
+    <StatusType statusTypeId="PARTY_STATUS" description="Party" hasTable="N"/>
+    <StatusItem statusId="PARTY_ENABLED" statusTypeId="PARTY_STATUS" statusCode="ENABLED" sequenceId="01" description="Enabled"/>
+    <StatusItem statusId="PARTY_DISABLED" statusTypeId="PARTY_STATUS" statusCode="DISABLED" sequenceId="02" description="Disabled"/>
+
+    <StatusType statusTypeId="LEAD_STATUS" parentTypeId="PARTY_STATUS" description="Lead Status" hasTable="N"/>
+    <StatusItem statusId="LEAD_ASSIGNED" statusTypeId="LEAD_STATUS" statusCode="ASSIGNED" sequenceId="01" description="Assigned"/>
+    <StatusValidChange statusId="PARTY_ENABLED" statusIdTo="LEAD_ASSIGNED" transitionName="Assigned"/>
+
+    <StatusType statusTypeId="CUSTREQ_STTS" description="Custom Request Status" hasTable="N"/>
+    <StatusItem statusId="CRQ_DRAFT" statusTypeId="CUSTREQ_STTS" statusCode="DRAFT" sequenceId="00" description="Draft"/>
+    <StatusItem statusId="CRQ_SUBMITTED" statusTypeId="CUSTREQ_STTS" statusCode="SUBMITTED" sequenceId="01" description="Submitted"/>
+    <StatusValidChange statusId="CRQ_DRAFT" statusIdTo="CRQ_SUBMITTED" transitionName="Submit Request"/>
+
+    <DataSourceType dataSourceTypeId="LEAD_SOURCE" description="Lead Source"/>
+    <DataSource dataSourceId="WEB_SITE" dataSourceTypeId="LEAD_SOURCE" description="Web Site"/>
+
+    <CustRequestType custRequestTypeId="RF_QUOTE" description="Request For Quote" hasTable="N"/>
+
+    <Party partyId="LeadParitySystem" partyTypeId="PERSON" statusId="PARTY_ENABLED"/>
+    <Person partyId="LeadParitySystem" firstName="Lead" lastName="Parity System"/>
+    <PartyStatus partyId="LeadParitySystem" statusId="PARTY_ENABLED" statusDate="2001-01-01 12:00:00.0"/>
+</entity-engine-xml>

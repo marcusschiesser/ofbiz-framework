@@ -1,0 +1,15 @@
+spring:
+  datasource:
+    url: "jdbc:h2:mem:leadflow;MODE=PostgreSQL;DB_CLOSE_DELAY=-1;DATABASE_TO_LOWER=TRUE;INIT=CREATE SCHEMA IF NOT EXISTS OFBIZ\\;SET SCHEMA OFBIZ"
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+
+leadflow:
+  ofbiz:
+    base-url: https://localhost:8443
+    created-by-user-login-id: system
+    lead-owner-party-id: LeadParitySystem
+    currency-uom-id: USD
+    default-request-type-id: RF_QUOTE
+    default-request-status-id: CRQ_SUBMITTED
