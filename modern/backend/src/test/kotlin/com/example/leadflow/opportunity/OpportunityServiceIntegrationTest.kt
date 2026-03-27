@@ -12,10 +12,13 @@ import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.springframework.boot.test.context.SpringBootTest
+import org.springframework.boot.test.web.server.LocalServerPort
+import org.springframework.http.MediaType
+import org.springframework.test.web.reactive.server.WebTestClient
 import org.springframework.jdbc.core.simple.JdbcClient
 import java.math.BigDecimal
 
-@SpringBootTest
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 class OpportunityServiceIntegrationTest {
     @org.springframework.beans.factory.annotation.Autowired
     lateinit var opportunityService: OpportunityService
@@ -25,6 +28,10 @@ class OpportunityServiceIntegrationTest {
 
     @org.springframework.beans.factory.annotation.Autowired
     lateinit var validator: Validator
+
+
+    @LocalServerPort
+    var port: Int = 0
 
     @Test
     fun `get opportunity returns assembled state after create and request save`() {
@@ -166,6 +173,134 @@ class OpportunityServiceIntegrationTest {
 
         assertTrue(violations.isNotEmpty())
     }
+
+
+    @Test
+    fun `list opportunities returns newest first with derived stage`() {
+        val suffix = uniqueSuffix()
+        val first =
+            opportunityService.createOpportunity(
+                OpportunityCreateRequest(
+                    firstName = "First",
+                    lastName = "Lead$suffix",
+                    email = "first+$suffix@example.com",
+                ),
+            )
+
+        val second =
+            opportunityService.createOpportunity(
+                OpportunityCreateRequest(
+                    firstName = "Second",
+                    lastName = "Lead$suffix",
+                    email = "second+$suffix@example.com",
+                ),
+            )
+
+        opportunityService.saveRequest(
+            first.partyId,
+            OpportunityRequestInput(
+                name = "Need quote",
+                lines =
+                    listOf(
+                        OpportunityRequestLineInput(
+                            description = "Line",
+                            quantity = BigDecimal("1"),
+                            unitPrice = BigDecimal("3.00"),
+                        ),
+                    ),
+            ),
+        )
+
+        jdbcClient.sql("insert into quote (quote_id, party_id, status_id) values (:quoteId, :partyId, 'QUO_CREATED')")
+            .param("quoteId", "Q$suffix")
+            .param("partyId", second.partyId)
+            .update()
+
+        val list = opportunityService.listOpportunities().items.filter { it.partyId == first.partyId || it.partyId == second.partyId }
+
+        assertEquals(2, list.size)
+        assertEquals(second.partyId, list[0].partyId)
+        assertEquals(OpportunityStage.QUOTE_READY, list[0].stage)
+        assertEquals("Handed off", list[0].nextAction)
+        assertEquals(first.partyId, list[1].partyId)
+        assertEquals(OpportunityStage.REQUEST_READY, list[1].stage)
+        assertEquals("Create quote", list[1].nextAction)
+    }
+
+
+    @Test
+    fun `controller endpoints cover list create save and validation error payloads`() {
+        val webTestClient = WebTestClient.bindToServer().baseUrl("http://localhost:$port").build()
+
+        val createPayload =
+            mapOf(
+                "firstName" to "Mia",
+                "lastName" to "Rep",
+                "email" to "mia.rep@example.com",
+                "companyName" to "Bergmann Labs",
+                "title" to "Buyer",
+                "dataSourceId" to "INTERNAL",
+            )
+
+        val created =
+            webTestClient.post().uri("/api/opportunities")
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue(createPayload)
+                .exchange()
+                .expectStatus().isOk
+                .expectBody()
+                .jsonPath("$.partyId").exists()
+                .jsonPath("$.stage").isEqualTo("NEW")
+                .returnResult()
+                .responseBody
+                ?.let { String(it, Charsets.UTF_8) }
+                .orEmpty()
+
+        val partyId = Regex("""\"partyId\"\s*:\s*\"([^\"]+)\"""").find(created)?.groupValues?.get(1)
+            ?: error("partyId not found in response: $created")
+
+        webTestClient.get().uri("/api/opportunities")
+            .exchange()
+            .expectStatus().isOk
+            .expectBody()
+            .jsonPath("$.items").isArray
+
+        val requestPayload =
+            mapOf(
+                "name" to "Customer request",
+                "description" to "Need a quote",
+                "story" to "Urgent for next week",
+                "lines" to listOf(mapOf("description" to "Widget package", "quantity" to 2, "unitPrice" to 30.5)),
+            )
+
+        webTestClient.put().uri("/api/opportunities/$partyId/request")
+            .contentType(MediaType.APPLICATION_JSON)
+            .bodyValue(requestPayload)
+            .exchange()
+            .expectStatus().isOk
+            .expectBody()
+            .jsonPath("$.partyId").isEqualTo(partyId)
+            .jsonPath("$.stage").isEqualTo("REQUEST_READY")
+
+        webTestClient.post().uri("/api/opportunities")
+            .contentType(MediaType.APPLICATION_JSON)
+            .bodyValue(mapOf("firstName" to "", "lastName" to "Rep", "email" to "bad"))
+            .exchange()
+            .expectStatus().isBadRequest
+            .expectBody()
+            .jsonPath("$.status").isEqualTo(400)
+            .jsonPath("$.message").exists()
+
+        webTestClient.put().uri("/api/opportunities/$partyId/request")
+            .contentType(MediaType.APPLICATION_JSON)
+            .bodyValue(mapOf("name" to "", "lines" to emptyList<String>()))
+            .exchange()
+            .expectStatus().isBadRequest
+            .expectBody()
+            .jsonPath("$.status").isEqualTo(400)
+            .jsonPath("$.message").exists()
+    }
+
 
     private fun uniqueSuffix(): String = System.nanoTime().toString().takeLast(8)
 }

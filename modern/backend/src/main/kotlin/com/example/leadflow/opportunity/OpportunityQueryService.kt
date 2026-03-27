@@ -6,11 +6,68 @@ import com.example.leadflow.shared.NotFoundException
 import org.springframework.jdbc.core.simple.JdbcClient
 import org.springframework.stereotype.Service
 import java.math.BigDecimal
+import java.time.Instant
 
 @Service
 class OpportunityQueryService(
     private val jdbcClient: JdbcClient,
 ) {
+    fun listOpportunities(): OpportunityListResponse {
+        val leads =
+            jdbcClient.sql(
+                """
+                select
+                  p.party_id,
+                  per.first_name,
+                  per.last_name,
+                  cm.info_string as email,
+                  pg.group_name as company_name,
+                  p.created_date,
+                  (
+                    select count(*)
+                    from cust_request cr
+                    where cr.from_party_id = p.party_id
+                  ) as request_count,
+                  (
+                    select count(*)
+                    from quote q
+                    where q.party_id = p.party_id
+                  ) as quote_count
+                from party p
+                join person per on per.party_id = p.party_id
+                left join party_contact_mech_purpose pcmp
+                  on pcmp.party_id = p.party_id
+                 and pcmp.contact_mech_purpose_type_id = 'PRIMARY_EMAIL'
+                 and pcmp.thru_date is null
+                left join contact_mech cm on cm.contact_mech_id = pcmp.contact_mech_id
+                left join party_relationship rel
+                  on rel.party_id_to = p.party_id
+                 and rel.role_type_id_to = 'LEAD'
+                 and rel.role_type_id_from = 'ACCOUNT_LEAD'
+                 and rel.party_relationship_type_id = 'EMPLOYMENT'
+                 and rel.thru_date is null
+                left join party_group pg on pg.party_id = rel.party_id_from
+                order by p.created_date desc, p.party_id desc
+                """.trimIndent(),
+            ).query { rs, _ ->
+                val hasQuote = rs.getLong("quote_count") > 0
+                val hasRequest = rs.getLong("request_count") > 0
+                val stage = deriveStage(hasRequest = hasRequest, hasQuote = hasQuote)
+                OpportunityListItem(
+                    partyId = rs.getString("party_id"),
+                    displayName = formatDisplayName(rs.getString("first_name"), rs.getString("last_name")),
+                    email = rs.getString("email") ?: "",
+                    companyName = rs.getString("company_name"),
+                    stage = stage,
+                    nextAction = nextActionFor(stage),
+                    hasRequest = hasRequest,
+                    createdAt = rs.getTimestamp("created_date")?.toInstant(),
+                )
+            }.list()
+
+        return OpportunityListResponse(items = leads)
+    }
+
     fun getOpportunity(partyId: String): OpportunityDetail {
         val lead =
             jdbcClient.sql(
@@ -44,7 +101,7 @@ class OpportunityQueryService(
                         partyId = rs.getString("party_id"),
                         firstName = rs.getString("first_name"),
                         lastName = rs.getString("last_name"),
-                        email = rs.getString("email"),
+                        email = rs.getString("email") ?: "",
                         companyPartyId = rs.getString("company_party_id"),
                         companyName = rs.getString("company_name"),
                     )
@@ -54,26 +111,16 @@ class OpportunityQueryService(
         val requestId = latestRequestIdForLead(partyId)
         val hasQuote = hasQuoteForLead(partyId)
         val request = requestId?.let { getRequest(it, hasQuote) }
-        val stage =
-            when {
-                hasQuote -> OpportunityStage.QUOTE_READY
-                request != null -> OpportunityStage.REQUEST_READY
-                else -> OpportunityStage.NEW
-            }
+        val stage = deriveStage(hasRequest = request != null, hasQuote = hasQuote)
 
         return OpportunityDetail(
             partyId = lead.partyId,
-            displayName = "${lead.firstName} ${lead.lastName}".trim(),
+            displayName = formatDisplayName(lead.firstName, lead.lastName),
             email = lead.email,
             companyPartyId = lead.companyPartyId,
             companyName = lead.companyName,
             stage = stage,
-            nextAction =
-                when (stage) {
-                    OpportunityStage.NEW -> "Add request"
-                    OpportunityStage.REQUEST_READY -> "Create quote"
-                    OpportunityStage.QUOTE_READY -> "Handed off"
-                },
+            nextAction = nextActionFor(stage),
             request = request,
         )
     }
@@ -168,6 +215,28 @@ class OpportunityQueryService(
             isLocked = isLocked,
         )
     }
+
+    private fun deriveStage(
+        hasRequest: Boolean,
+        hasQuote: Boolean,
+    ): OpportunityStage =
+        when {
+            hasQuote -> OpportunityStage.QUOTE_READY
+            hasRequest -> OpportunityStage.REQUEST_READY
+            else -> OpportunityStage.NEW
+        }
+
+    private fun nextActionFor(stage: OpportunityStage): String =
+        when (stage) {
+            OpportunityStage.NEW -> "Add request"
+            OpportunityStage.REQUEST_READY -> "Create quote"
+            OpportunityStage.QUOTE_READY -> "Handed off"
+        }
+
+    private fun formatDisplayName(
+        firstName: String?,
+        lastName: String?,
+    ): String = listOfNotNull(firstName?.trim(), lastName?.trim()).joinToString(" ").trim()
 
     private data class LeadView(
         val partyId: String,

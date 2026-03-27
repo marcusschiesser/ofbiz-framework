@@ -12,6 +12,7 @@ class OpportunityService(
     private val requestCommandService: com.example.leadflow.request.RequestCommandService,
     private val opportunityQueryService: OpportunityQueryService,
 ) {
+    fun listOpportunities(): OpportunityListResponse = opportunityQueryService.listOpportunities()
     @Transactional
     fun createOpportunity(request: OpportunityCreateRequest): OpportunityDetail {
         val lead = leadCommandService.createLead(request)
