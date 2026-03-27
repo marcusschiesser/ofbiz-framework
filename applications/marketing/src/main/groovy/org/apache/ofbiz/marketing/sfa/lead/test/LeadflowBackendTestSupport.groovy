@@ -256,6 +256,25 @@ class LeadflowBackendClassLoader extends URLClassLoader {
     }
 
     @Override
+    URL getResource(String name) {
+        if (isChildFirstResource(name)) {
+            URL resource = findResource(name)
+            if (resource != null) {
+                return resource
+            }
+        }
+        return super.getResource(name)
+    }
+
+    @Override
+    Enumeration<URL> getResources(String name) throws IOException {
+        if (isChildFirstResource(name)) {
+            return findResources(name)
+        }
+        return super.getResources(name)
+    }
+
+    @Override
     protected Class<?> loadClass(String name, boolean resolve) throws ClassNotFoundException {
         synchronized (getClassLoadingLock(name)) {
             Class<?> loaded = findLoadedClass(name)
@@ -273,25 +292,6 @@ class LeadflowBackendClassLoader extends URLClassLoader {
             }
             return loaded
         }
-    }
-
-    @Override
-    URL getResource(String name) {
-        if (isChildFirstResource(name)) {
-            URL resource = findResource(name)
-            if (resource != null) {
-                return resource
-            }
-        }
-        return super.getResource(name)
-    }
-
-    @Override
-    Enumeration<URL> getResources(String name) throws IOException {
-        if (isChildFirstResource(name)) {
-            return findResources(name)
-        }
-        return super.getResources(name)
     }
 
     private static boolean isChildFirst(String name) {
