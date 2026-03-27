@@ -240,8 +240,15 @@ class LeadflowBackendClassLoader extends URLClassLoader {
             'org.yaml.snakeyaml.',
             'ch.qos.logback.',
             'org.slf4j.',
+            'org.apache.el.',
             'reactor.',
             'io.micrometer.'
+    ]
+
+    private static final List<String> CHILD_FIRST_RESOURCE_PREFIXES = [
+            'META-INF/spring/',
+            'META-INF/spring.factories',
+            'META-INF/services/'
     ]
 
     LeadflowBackendClassLoader(URL[] urls, ClassLoader parent) {
@@ -268,8 +275,36 @@ class LeadflowBackendClassLoader extends URLClassLoader {
         }
     }
 
+    @Override
+    URL getResource(String name) {
+        if (isChildFirstResource(name)) {
+            URL resource = findResource(name)
+            if (resource != null) {
+                return resource
+            }
+        }
+        return super.getResource(name)
+    }
+
+    @Override
+    Enumeration<URL> getResources(String name) throws IOException {
+        if (isChildFirstResource(name)) {
+            return findResources(name)
+        }
+        return super.getResources(name)
+    }
+
     private static boolean isChildFirst(String name) {
         for (String prefix : CHILD_FIRST_PREFIXES) {
+            if (name.startsWith(prefix)) {
+                return true
+            }
+        }
+        return false
+    }
+
+    private static boolean isChildFirstResource(String name) {
+        for (String prefix : CHILD_FIRST_RESOURCE_PREFIXES) {
             if (name.startsWith(prefix)) {
                 return true
             }
