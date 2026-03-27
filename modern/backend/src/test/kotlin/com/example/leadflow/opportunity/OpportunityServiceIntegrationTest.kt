@@ -167,5 +167,54 @@ class OpportunityServiceIntegrationTest {
         assertTrue(violations.isNotEmpty())
     }
 
+
+
+    @Test
+    fun `list opportunities returns newest first with derived stage`() {
+        val oldSuffix = uniqueSuffix()
+        val oldLead =
+            opportunityService.createOpportunity(
+                OpportunityCreateRequest(
+                    firstName = "Older",
+                    lastName = "Lead$oldSuffix",
+                    email = "older+$oldSuffix@example.com",
+                ),
+            )
+
+        opportunityService.saveRequest(
+            oldLead.partyId,
+            OpportunityRequestInput(
+                name = "Old request",
+                lines =
+                    listOf(
+                        OpportunityRequestLineInput(
+                            description = "Old line",
+                            quantity = BigDecimal("1"),
+                            unitPrice = BigDecimal("3.00"),
+                        ),
+                    ),
+            ),
+        )
+
+        val newSuffix = uniqueSuffix()
+        val newLead =
+            opportunityService.createOpportunity(
+                OpportunityCreateRequest(
+                    firstName = "Newest",
+                    lastName = "Lead$newSuffix",
+                    email = "new+$newSuffix@example.com",
+                ),
+            )
+
+        val listed = opportunityService.listOpportunities().opportunities
+        val oldIndex = listed.indexOfFirst { it.partyId == oldLead.partyId }
+        val newIndex = listed.indexOfFirst { it.partyId == newLead.partyId }
+
+        assertTrue(oldIndex >= 0)
+        assertTrue(newIndex >= 0)
+        assertTrue(newIndex < oldIndex, "Expected newer lead to be listed first")
+        assertEquals(OpportunityStage.REQUEST_READY, listed.first { it.partyId == oldLead.partyId }.stage)
+        assertEquals(OpportunityStage.NEW, listed.first { it.partyId == newLead.partyId }.stage)
+    }
     private fun uniqueSuffix(): String = System.nanoTime().toString().takeLast(8)
 }

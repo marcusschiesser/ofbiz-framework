@@ -16,6 +16,9 @@ import org.springframework.web.bind.annotation.RestController
 class OpportunityController(
     private val opportunityService: OpportunityService,
 ) {
+    @GetMapping
+    fun listOpportunities(): OpportunityListResponse = opportunityService.listOpportunities()
+
     @PostMapping
     fun createOpportunity(
         @Valid @RequestBody request: OpportunityCreateRequest,
