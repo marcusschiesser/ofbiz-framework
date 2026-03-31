@@ -21,6 +21,8 @@ management:
         include: health,info
 
 leadflow:
+  web:
+    allowed-origin: ${LEADFLOW_WEB_ALLOWED_ORIGIN:http://localhost:19006}
   ofbiz:
     base-url: ${LEADFLOW_OFBIZ_BASE_URL:https://localhost:8443}
     created-by-user-login-id: ${LEADFLOW_CREATED_BY_USER_LOGIN_ID:system}

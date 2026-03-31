@@ -28,4 +28,6 @@ class OpportunityService(
     }
 
     fun getOpportunity(partyId: String): OpportunityDetail = opportunityQueryService.getOpportunity(partyId)
+
+    fun listOpportunities(): OpportunityListResponse = opportunityQueryService.listOpportunities()
 }
