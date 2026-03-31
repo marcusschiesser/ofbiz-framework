@@ -37,11 +37,13 @@ docker compose -f docker/examples/leadflow-demo/docker-compose.yml up --build
 ```
 
 This starts PostgreSQL, OFBiz with demo data, and the Spring Boot backend together.
+It also builds and serves the Expo mobile app as a web bundle.
 
 Once startup completes, use:
 
 - OFBiz: [https://localhost:8443/partymgr](https://localhost:8443/partymgr)
 - Backend: [http://localhost:8081/api/opportunities](http://localhost:8081/api/opportunities)
+- Mobile app: [http://localhost:19006](http://localhost:19006)
 
 OFBiz demo login:
 

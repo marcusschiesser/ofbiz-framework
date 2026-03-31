@@ -85,3 +85,14 @@ services:
         --spring.datasource.url=jdbc:postgresql://db:5432/$$OFBIZ_POSTGRES_OFBIZ_DB
         --spring.datasource.username=$$OFBIZ_POSTGRES_OFBIZ_USER
         --spring.datasource.password=$$OFBIZ_POSTGRES_OFBIZ_PASSWORD
+
+  mobile:
+    build:
+      context: ../../../modern/mobile
+      args:
+        EXPO_PUBLIC_API_BASE_URL: http://localhost:8081
+    depends_on:
+      backend:
+        condition: service_started
+    ports:
+      - 19006:80

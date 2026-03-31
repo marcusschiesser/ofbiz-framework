@@ -1,0 +1,11 @@
+{
+  "expo": {
+    "name": "Bergmann Lead Capture",
+    "slug": "bergmann-lead-capture",
+    "scheme": "bergmannleadcapture",
+    "plugins": ["expo-router"],
+    "experiments": {
+      "typedRoutes": true
+    }
+  }
+}
