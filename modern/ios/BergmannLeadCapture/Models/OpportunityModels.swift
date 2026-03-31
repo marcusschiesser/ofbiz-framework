@@ -104,7 +104,6 @@ struct OpportunityRequestLineDetail: Codable, Identifiable {
 }
 
 struct ApiErrorResponse: Codable, Error {
-    let code: String
+    let status: Int
     let message: String
-    let details: [String]?
 }
