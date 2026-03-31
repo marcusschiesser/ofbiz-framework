@@ -617,6 +617,22 @@ public final class UtilMisc {
     }
 
     /**
+     * Returns the list of allowed origins used by CORS filters.
+     * Property key: {@code cors-origins-allowed} in {@code security.properties}.
+     *
+     * @return immutable list of configured origins, or {@code null} when unset.
+     */
+    public static List<String> getCorsOriginsAllowed() {
+        String corsOriginsAllowedString = UtilProperties.getPropertyValue("security", "cors-origins-allowed");
+        List<String> corsOriginsAllowed = null;
+        if (UtilValidate.isNotEmpty(corsOriginsAllowedString)) {
+            corsOriginsAllowed = StringUtil.split(corsOriginsAllowedString, ",");
+            corsOriginsAllowed = Collections.unmodifiableList(corsOriginsAllowed);
+        }
+        return corsOriginsAllowed;
+    }
+
+    /**
      * @deprecated use Thread.sleep()
      */
     @Deprecated
