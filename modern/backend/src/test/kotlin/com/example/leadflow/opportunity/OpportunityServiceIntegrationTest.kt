@@ -14,6 +14,7 @@ import org.junit.jupiter.api.Test
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.jdbc.core.simple.JdbcClient
 import java.math.BigDecimal
+import java.sql.Timestamp
 
 @SpringBootTest
 class OpportunityServiceIntegrationTest {
@@ -165,6 +166,120 @@ class OpportunityServiceIntegrationTest {
             )
 
         assertTrue(violations.isNotEmpty())
+    }
+
+
+
+    @Test
+    fun `list opportunities returns newest first with derived stage`() {
+        val oldSuffix = uniqueSuffix()
+        val oldLead =
+            opportunityService.createOpportunity(
+                OpportunityCreateRequest(
+                    firstName = "Older",
+                    lastName = "Lead$oldSuffix",
+                    email = "older+$oldSuffix@example.com",
+                ),
+            )
+
+        opportunityService.saveRequest(
+            oldLead.partyId,
+            OpportunityRequestInput(
+                name = "Old request",
+                lines =
+                    listOf(
+                        OpportunityRequestLineInput(
+                            description = "Old line",
+                            quantity = BigDecimal("1"),
+                            unitPrice = BigDecimal("3.00"),
+                        ),
+                    ),
+            ),
+        )
+
+        val newSuffix = uniqueSuffix()
+        val newLead =
+            opportunityService.createOpportunity(
+                OpportunityCreateRequest(
+                    firstName = "Newest",
+                    lastName = "Lead$newSuffix",
+                    email = "new+$newSuffix@example.com",
+                ),
+            )
+
+        val listed = opportunityService.listOpportunities().opportunities
+        val oldIndex = listed.indexOfFirst { it.partyId == oldLead.partyId }
+        val newIndex = listed.indexOfFirst { it.partyId == newLead.partyId }
+
+        assertTrue(oldIndex >= 0)
+        assertTrue(newIndex >= 0)
+        assertTrue(newIndex < oldIndex, "Expected newer lead to be listed first")
+        assertEquals(OpportunityStage.REQUEST_READY, listed.first { it.partyId == oldLead.partyId }.stage)
+        assertEquals(OpportunityStage.NEW, listed.first { it.partyId == newLead.partyId }.stage)
+    }
+
+    @Test
+    fun `list opportunities returns one row per lead when multiple active emails exist`() {
+        val suffix = uniqueSuffix()
+        val created =
+            opportunityService.createOpportunity(
+                OpportunityCreateRequest(
+                    firstName = "Duplicate",
+                    lastName = "Email$suffix",
+                    email = "duplicate+$suffix@example.com",
+                    companyName = "Dup Co $suffix",
+                ),
+            )
+
+        val extraContactMechId = "CM$suffix"
+        val newerFromDate = Timestamp.from(java.time.Instant.now().plusSeconds(60))
+        jdbcClient.sql(
+            """
+            insert into contact_mech (
+              contact_mech_id, contact_mech_type_id, info_string,
+              last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp
+            ) values (
+              :contactMechId, 'EMAIL_ADDRESS', :email,
+              current_timestamp, current_timestamp, current_timestamp, current_timestamp
+            )
+            """.trimIndent(),
+        ).param("contactMechId", extraContactMechId)
+            .param("email", "duplicate+latest+$suffix@example.com")
+            .update()
+
+        jdbcClient.sql(
+            """
+            insert into party_contact_mech (
+              party_id, contact_mech_id, from_date, verified,
+              last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp
+            ) values (
+              :partyId, :contactMechId, :fromDate, 'Y',
+              :fromDate, :fromDate, :fromDate, :fromDate
+            )
+            """.trimIndent(),
+        ).param("partyId", created.partyId)
+            .param("contactMechId", extraContactMechId)
+            .param("fromDate", newerFromDate)
+            .update()
+
+        jdbcClient.sql(
+            """
+            insert into party_contact_mech_purpose (
+              party_id, contact_mech_id, contact_mech_purpose_type_id, from_date,
+              last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp
+            ) values (
+              :partyId, :contactMechId, 'PRIMARY_EMAIL', :fromDate,
+              :fromDate, :fromDate, :fromDate, :fromDate
+            )
+            """.trimIndent(),
+        ).param("partyId", created.partyId)
+            .param("contactMechId", extraContactMechId)
+            .param("fromDate", newerFromDate)
+            .update()
+
+        val listed = opportunityService.listOpportunities().opportunities.filter { it.partyId == created.partyId }
+        assertEquals(1, listed.size)
+        assertEquals("duplicate+latest+$suffix@example.com", listed.single().email)
     }
 
     private fun uniqueSuffix(): String = System.nanoTime().toString().takeLast(8)

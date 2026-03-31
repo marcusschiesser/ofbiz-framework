@@ -6,15 +6,130 @@ import com.example.leadflow.shared.NotFoundException
 import org.springframework.jdbc.core.simple.JdbcClient
 import org.springframework.stereotype.Service
 import java.math.BigDecimal
+import java.time.Instant
 
 @Service
 class OpportunityQueryService(
     private val jdbcClient: JdbcClient,
 ) {
+    fun listOpportunities(): OpportunityListResponse {
+        val rows =
+            jdbcClient.sql(
+                """
+                with ranked_primary_email as (
+                  select
+                    pcmp.party_id,
+                    pcmp.contact_mech_id,
+                    row_number() over (
+                      partition by pcmp.party_id
+                      order by pcmp.from_date desc, pcmp.contact_mech_id desc
+                    ) as row_num
+                  from party_contact_mech_purpose pcmp
+                  where pcmp.contact_mech_purpose_type_id = 'PRIMARY_EMAIL'
+                    and pcmp.thru_date is null
+                ),
+                current_primary_email as (
+                  select party_id, contact_mech_id
+                  from ranked_primary_email
+                  where row_num = 1
+                ),
+                ranked_active_relationship as (
+                  select
+                    rel.party_id_to,
+                    rel.party_id_from,
+                    row_number() over (
+                      partition by rel.party_id_to
+                      order by rel.from_date desc, rel.party_id_from desc
+                    ) as row_num
+                  from party_relationship rel
+                  where rel.role_type_id_to = 'LEAD'
+                    and rel.role_type_id_from = 'ACCOUNT_LEAD'
+                    and rel.party_relationship_type_id = 'EMPLOYMENT'
+                    and rel.thru_date is null
+                ),
+                current_active_relationship as (
+                  select party_id_to, party_id_from
+                  from ranked_active_relationship
+                  where row_num = 1
+                )
+                select
+                  p.party_id,
+                  p.created_date,
+                  per.first_name,
+                  per.last_name,
+                  cm.info_string as email,
+                  pg.group_name as company_name,
+                  case when exists (select 1 from cust_request cr where cr.from_party_id = p.party_id) then 1 else 0 end as has_request,
+                  case when exists (select 1 from quote q where q.party_id = p.party_id) then 1 else 0 end as has_quote
+                from party p
+                join person per on per.party_id = p.party_id
+                join party_role lead_role on lead_role.party_id = p.party_id and lead_role.role_type_id = 'LEAD'
+                left join current_primary_email cpe on cpe.party_id = p.party_id
+                left join contact_mech cm on cm.contact_mech_id = cpe.contact_mech_id
+                left join current_active_relationship car on car.party_id_to = p.party_id
+                left join party_group pg on pg.party_id = car.party_id_from
+                order by p.created_date desc, p.party_id desc
+                """.trimIndent(),
+            ).query { rs, _ ->
+                val hasRequest = rs.getInt("has_request") == 1
+                val hasQuote = rs.getInt("has_quote") == 1
+                val stage = deriveStage(hasQuote = hasQuote, hasRequest = hasRequest)
+
+                OpportunityListItem(
+                    partyId = rs.getString("party_id"),
+                    displayName = "${rs.getString("first_name") ?: ""} ${rs.getString("last_name") ?: ""}".trim(),
+                    email = rs.getString("email") ?: "",
+                    companyName = rs.getString("company_name"),
+                    stage = stage,
+                    nextAction = nextActionForStage(stage),
+                    hasRequest = hasRequest,
+                    createdAt = (rs.getTimestamp("created_date")?.toInstant() ?: Instant.EPOCH),
+                )
+            }.list()
+
+        return OpportunityListResponse(opportunities = rows)
+    }
+
     fun getOpportunity(partyId: String): OpportunityDetail {
         val lead =
             jdbcClient.sql(
                 """
+                with ranked_primary_email as (
+                  select
+                    pcmp.party_id,
+                    pcmp.contact_mech_id,
+                    row_number() over (
+                      partition by pcmp.party_id
+                      order by pcmp.from_date desc, pcmp.contact_mech_id desc
+                    ) as row_num
+                  from party_contact_mech_purpose pcmp
+                  where pcmp.contact_mech_purpose_type_id = 'PRIMARY_EMAIL'
+                    and pcmp.thru_date is null
+                ),
+                current_primary_email as (
+                  select party_id, contact_mech_id
+                  from ranked_primary_email
+                  where row_num = 1
+                ),
+                ranked_active_relationship as (
+                  select
+                    rel.party_id_to,
+                    rel.party_id_from,
+                    row_number() over (
+                      partition by rel.party_id_to
+                      order by rel.from_date desc, rel.party_id_from desc
+                    ) as row_num
+                  from party_relationship rel
+                  where rel.role_type_id_to = 'LEAD'
+                    and rel.role_type_id_from = 'ACCOUNT_LEAD'
+                    and rel.party_relationship_type_id = 'EMPLOYMENT'
+                    and rel.thru_date is null
+                ),
+                current_active_relationship as (
+                  select party_id_to, party_id_from
+                  from ranked_active_relationship
+                  where row_num = 1
+                )
                 select
                   p.party_id,
                   per.first_name,
@@ -24,18 +139,10 @@ class OpportunityQueryService(
                   pg.group_name as company_name
                 from party p
                 join person per on per.party_id = p.party_id
-                left join party_contact_mech_purpose pcmp
-                  on pcmp.party_id = p.party_id
-                 and pcmp.contact_mech_purpose_type_id = 'PRIMARY_EMAIL'
-                 and pcmp.thru_date is null
-                left join contact_mech cm on cm.contact_mech_id = pcmp.contact_mech_id
-                left join party_relationship rel
-                  on rel.party_id_to = p.party_id
-                 and rel.role_type_id_to = 'LEAD'
-                 and rel.role_type_id_from = 'ACCOUNT_LEAD'
-                 and rel.party_relationship_type_id = 'EMPLOYMENT'
-                 and rel.thru_date is null
-                left join party_group pg on pg.party_id = rel.party_id_from
+                left join current_primary_email cpe on cpe.party_id = p.party_id
+                left join contact_mech cm on cm.contact_mech_id = cpe.contact_mech_id
+                left join current_active_relationship car on car.party_id_to = p.party_id
+                left join party_group pg on pg.party_id = car.party_id_from
                 where p.party_id = :partyId
                 """.trimIndent(),
             ).param("partyId", partyId)
@@ -54,12 +161,7 @@ class OpportunityQueryService(
         val requestId = latestRequestIdForLead(partyId)
         val hasQuote = hasQuoteForLead(partyId)
         val request = requestId?.let { getRequest(it, hasQuote) }
-        val stage =
-            when {
-                hasQuote -> OpportunityStage.QUOTE_READY
-                request != null -> OpportunityStage.REQUEST_READY
-                else -> OpportunityStage.NEW
-            }
+        val stage = deriveStage(hasQuote = hasQuote, hasRequest = request != null)
 
         return OpportunityDetail(
             partyId = lead.partyId,
@@ -68,12 +170,7 @@ class OpportunityQueryService(
             companyPartyId = lead.companyPartyId,
             companyName = lead.companyName,
             stage = stage,
-            nextAction =
-                when (stage) {
-                    OpportunityStage.NEW -> "Add request"
-                    OpportunityStage.REQUEST_READY -> "Create quote"
-                    OpportunityStage.QUOTE_READY -> "Handed off"
-                },
+            nextAction = nextActionForStage(stage),
             request = request,
         )
     }
@@ -97,6 +194,23 @@ class OpportunityQueryService(
             .param("leadPartyId", leadPartyId)
             .query(Long::class.java)
             .single() > 0L
+
+    private fun deriveStage(
+        hasQuote: Boolean,
+        hasRequest: Boolean,
+    ): OpportunityStage =
+        when {
+            hasQuote -> OpportunityStage.QUOTE_READY
+            hasRequest -> OpportunityStage.REQUEST_READY
+            else -> OpportunityStage.NEW
+        }
+
+    private fun nextActionForStage(stage: OpportunityStage): String =
+        when (stage) {
+            OpportunityStage.NEW -> "Add request"
+            OpportunityStage.REQUEST_READY -> "Create quote"
+            OpportunityStage.QUOTE_READY -> "Handed off"
+        }
 
     private fun getRequest(
         requestId: String,

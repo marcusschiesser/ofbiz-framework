@@ -5,6 +5,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler
 import org.springframework.web.bind.annotation.RestControllerAdvice
 import org.springframework.validation.BindException
 import org.springframework.web.bind.MethodArgumentNotValidException
+import org.springframework.web.bind.support.WebExchangeBindException
 import org.slf4j.LoggerFactory
 
 @RestControllerAdvice
@@ -17,12 +18,13 @@ class GlobalExceptionHandler {
     fun handleApiException(exception: ApiException): ResponseEntity<ApiError> =
         ResponseEntity.status(exception.status).body(ApiError(exception.status, exception.message ?: "Unexpected error"))
 
-    @ExceptionHandler(MethodArgumentNotValidException::class, BindException::class)
+    @ExceptionHandler(MethodArgumentNotValidException::class, BindException::class, WebExchangeBindException::class)
     fun handleValidationException(exception: Exception): ResponseEntity<ApiError> {
         val message =
             when (exception) {
                 is MethodArgumentNotValidException -> exception.bindingResult.fieldErrors.firstOrNull()?.defaultMessage
                 is BindException -> exception.bindingResult.fieldErrors.firstOrNull()?.defaultMessage
+                is WebExchangeBindException -> exception.bindingResult.fieldErrors.firstOrNull()?.defaultMessage
                 else -> null
             } ?: "Validation failed"
 

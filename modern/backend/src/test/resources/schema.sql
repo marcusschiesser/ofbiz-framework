@@ -1,3 +1,7 @@
+drop all objects;
+create schema if not exists ofbiz;
+set schema ofbiz;
+
 create table sequence_value_item (
   seq_name varchar(100) primary key,
   seq_id decimal(18, 0) not null,
