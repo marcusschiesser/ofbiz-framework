@@ -80,6 +80,15 @@ struct OpportunityRequestDetail: Codable {
     let story: String?
     let lines: [OpportunityRequestLineDetail]
     let isLocked: Bool
+
+    enum CodingKeys: String, CodingKey {
+        case requestId
+        case name
+        case description
+        case story
+        case lines
+        case isLocked = "locked"
+    }
 }
 
 struct OpportunityRequestLineDetail: Codable, Identifiable {

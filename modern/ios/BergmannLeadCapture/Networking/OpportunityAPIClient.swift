@@ -7,7 +7,7 @@ struct OpportunityAPIClient {
     let saveRequest: (_ partyId: String, _ request: OpportunityRequestInput) async throws -> OpportunityDetail
 
     static let live: OpportunityAPIClient = {
-        let service = OpportunityAPIService(baseURL: URL(string: "http://localhost:8080")!)
+        let service = OpportunityAPIService(baseURL: URL(string: "http://localhost:8081")!)
         return OpportunityAPIClient(
             listOpportunities: { try await service.send(.listOpportunities, decode: OpportunityListResponse.self).opportunities },
             getOpportunity: { try await service.send(.getOpportunity($0), decode: OpportunityDetail.self) },
@@ -46,7 +46,7 @@ enum OpportunityEndpoint {
 }
 
 final class OpportunityAPIService {
-    static var baseURL: URL = URL(string: "http://localhost:8080")!
+    static var baseURL: URL = URL(string: "http://localhost:8081")!
     static let decoder: JSONDecoder = {
         let decoder = JSONDecoder()
         decoder.dateDecodingStrategy = .iso8601
