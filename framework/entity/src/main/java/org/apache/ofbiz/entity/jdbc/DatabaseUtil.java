@@ -36,6 +36,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
+import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
@@ -353,7 +354,7 @@ public class DatabaseUtil {
             if (tableNames.contains(tableName)) {
                 tableNames.remove(tableName);
 
-                Map<String, ModelField> fieldColNames = new HashMap<>();
+                Map<String, ModelField> fieldColNames = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
                 Iterator<ModelField> fieldIter = entity.getFieldsIterator();
                 while (fieldIter.hasNext()) {
                     ModelField field = fieldIter.next();
@@ -1202,7 +1203,7 @@ public class DatabaseUtil {
 
                             Map<String, ColumnCheckInfo> tableColInfo = colInfo.get(ccInfo.tableName);
                             if (tableColInfo == null) {
-                                tableColInfo = new HashMap<>();
+                                tableColInfo = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
                                 colInfo.put(ccInfo.tableName, tableColInfo);
                             }
                             tableColInfo.put(ccInfo.columnName, ccInfo);
