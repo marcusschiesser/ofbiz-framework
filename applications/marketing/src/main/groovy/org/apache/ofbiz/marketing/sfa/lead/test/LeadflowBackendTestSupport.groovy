@@ -219,12 +219,6 @@ class LeadflowBackendTestServer {
         throw new IllegalStateException("modern/backend did not become healthy on ${healthUri}")
     }
 
-    private static String runtimeClasspath() {
-        return Files.readAllLines(runtimeClasspathFile())
-                .findAll { !it.isBlank() }
-                .join(File.pathSeparator)
-    }
-
     private static String ofbizHome() {
         return System.getProperty('ofbiz.home', new File('.').absolutePath)
     }
