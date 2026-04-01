@@ -5,12 +5,16 @@ import org.junit.jupiter.api.Test
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.web.server.LocalServerPort
 import org.springframework.http.MediaType
+import org.springframework.jdbc.core.simple.JdbcClient
 import org.springframework.test.web.reactive.server.WebTestClient
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 class OpportunityControllerTest {
     @LocalServerPort
     var port: Int = 0
+
+    @org.springframework.beans.factory.annotation.Autowired
+    lateinit var jdbcClient: JdbcClient
 
     private val mapper = jacksonObjectMapper()
 
@@ -25,6 +29,45 @@ class OpportunityControllerTest {
             .expectHeader().contentTypeCompatibleWith(MediaType.APPLICATION_JSON)
             .expectBody()
             .jsonPath("$.opportunities").isArray
+    }
+
+    @Test
+    fun `detail endpoint tolerates lead without primary email`() {
+        val createdBody =
+            client().post()
+                .uri("/api/opportunities")
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue(
+                    mapOf(
+                        "firstName" to "No",
+                        "lastName" to "Email",
+                        "email" to "no.email@example.com",
+                    ),
+                )
+                .exchange()
+                .expectStatus().isOk
+                .expectBody()
+                .returnResult()
+                .responseBody
+
+        val partyId = mapper.readTree(String(createdBody ?: ByteArray(0))).path("partyId").asText()
+
+        jdbcClient.sql(
+            """
+            delete from party_contact_mech_purpose
+            where party_id = :partyId and contact_mech_purpose_type_id = 'PRIMARY_EMAIL'
+            """.trimIndent(),
+        ).param("partyId", partyId)
+            .update()
+
+        client().get()
+            .uri("/api/opportunities/$partyId")
+            .exchange()
+            .expectStatus().isOk
+            .expectHeader().contentTypeCompatibleWith(MediaType.APPLICATION_JSON)
+            .expectBody()
+            .jsonPath("$.partyId").isEqualTo(partyId)
+            .jsonPath("$.email").isEqualTo("")
     }
 
     @Test
