@@ -21,6 +21,7 @@ package org.apache.ofbiz.marketing.sfa.lead.test
 import groovy.json.JsonOutput
 import groovy.json.JsonSlurper
 
+import java.lang.reflect.InvocationTargetException
 import java.net.http.HttpClient
 import java.net.http.HttpRequest
 import java.net.http.HttpResponse
@@ -87,7 +88,6 @@ class LeadflowBackendTestServer {
         synchronized (LOCK) {
             if (applicationContext == null) {
                 prepareRuntime()
-                port = reservePort()
                 Map<String, String> previous = applyProperties()
                 try {
                     applicationClassLoader = new LeadflowBackendClassLoader(runtimeClasspathUrls(), LeadflowBackendTestServer.classLoader)
@@ -99,6 +99,16 @@ class LeadflowBackendTestServer {
                         Class<?> springApplication = applicationClassLoader.loadClass('org.springframework.boot.SpringApplication')
                         applicationContext = springApplication.getMethod('run', Class, String[].class)
                                 .invoke(null, appClass, (Object) new String[0])
+                        port = resolveBoundPort(applicationContext)
+                    } catch (InvocationTargetException e) {
+                        Throwable cause = e.cause
+                        if (cause instanceof RuntimeException) {
+                            throw (RuntimeException) cause
+                        }
+                        if (cause instanceof Error) {
+                            throw (Error) cause
+                        }
+                        throw new IllegalStateException('Failed to start modern/backend parity server.', cause)
                     } finally {
                         thread.contextClassLoader = previousLoader
                     }
@@ -139,7 +149,7 @@ class LeadflowBackendTestServer {
                 'server.error.include-stacktrace': System.getProperty('server.error.include-stacktrace')
         ]
         [
-                SERVER_PORT: port.toString(),
+                SERVER_PORT: '0',
                 LEADFLOW_DB_URL: 'jdbc:derby:ofbiz',
                 LEADFLOW_DB_DRIVER: 'org.apache.derby.jdbc.EmbeddedDriver',
                 LEADFLOW_CREATED_BY_USER_LOGIN_ID: 'system',
@@ -161,15 +171,6 @@ class LeadflowBackendTestServer {
             } else {
                 System.setProperty(key, value)
             }
-        }
-    }
-
-    private static int reservePort() {
-        ServerSocket socket = new ServerSocket(0)
-        try {
-            return socket.localPort
-        } finally {
-            socket.close()
         }
     }
 
@@ -219,6 +220,11 @@ class LeadflowBackendTestServer {
         throw new IllegalStateException("modern/backend did not become healthy on ${healthUri}")
     }
 
+    private static Integer resolveBoundPort(Object context) {
+        Object webServer = context.getClass().getMethod('getWebServer').invoke(context)
+        return (Integer) webServer.getClass().getMethod('getPort').invoke(webServer)
+    }
+
     private static String ofbizHome() {
         return System.getProperty('ofbiz.home', new File('.').absolutePath)
     }
@@ -264,7 +270,7 @@ class LeadflowBackendClassLoader extends URLClassLoader {
 
     @Override
     URL getResource(String name) {
-        if (isChildFirstResource(name)) {
+        if (isChildFirstResource(name) || isChildFirstClassResource(name)) {
             URL resource = findResource(name)
             if (resource != null) {
                 return resource
@@ -277,6 +283,12 @@ class LeadflowBackendClassLoader extends URLClassLoader {
     Enumeration<URL> getResources(String name) throws IOException {
         if (isChildFirstResource(name)) {
             return findResources(name)
+        }
+        if (isChildFirstClassResource(name)) {
+            URL resource = findResource(name)
+            if (resource != null) {
+                return Collections.enumeration([resource])
+            }
         }
         return super.getResources(name)
     }
@@ -317,6 +329,14 @@ class LeadflowBackendClassLoader extends URLClassLoader {
             }
         }
         return false
+    }
+
+    private static boolean isChildFirstClassResource(String name) {
+        if (!name.endsWith('.class')) {
+            return false
+        }
+        String className = name.substring(0, name.length() - '.class'.length()).replace('/', '.')
+        return isChildFirst(className)
     }
 
 }
