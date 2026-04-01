@@ -219,6 +219,12 @@ class LeadflowBackendTestServer {
         throw new IllegalStateException("modern/backend did not become healthy on ${healthUri}")
     }
 
+    private static String runtimeClasspath() {
+        return Files.readAllLines(runtimeClasspathFile())
+                .findAll { !it.isBlank() }
+                .join(File.pathSeparator)
+    }
+
     private static String ofbizHome() {
         return System.getProperty('ofbiz.home', new File('.').absolutePath)
     }
@@ -247,9 +253,16 @@ class LeadflowBackendClassLoader extends URLClassLoader {
 
     private static final List<String> CHILD_FIRST_RESOURCE_PREFIXES = [
             'META-INF/spring/',
-            'META-INF/spring.factories',
             'META-INF/services/'
     ]
+
+    private static final Set<String> CHILD_FIRST_RESOURCE_NAMES = [
+            'META-INF/spring.factories',
+            'META-INF/spring.components',
+            'META-INF/spring-autoconfigure-metadata.properties',
+            'META-INF/spring-configuration-metadata.json',
+            'META-INF/additional-spring-configuration-metadata.json'
+    ] as Set<String>
 
     LeadflowBackendClassLoader(URL[] urls, ClassLoader parent) {
         super(urls, parent)
@@ -279,10 +292,7 @@ class LeadflowBackendClassLoader extends URLClassLoader {
         synchronized (getClassLoadingLock(name)) {
             Class<?> loaded = findLoadedClass(name)
             if (loaded == null && isChildFirst(name)) {
-                try {
-                    loaded = findClass(name)
-                } catch (ClassNotFoundException ignored) {
-                }
+                loaded = findClass(name)
             }
             if (loaded == null) {
                 loaded = super.loadClass(name, false)
@@ -304,6 +314,9 @@ class LeadflowBackendClassLoader extends URLClassLoader {
     }
 
     private static boolean isChildFirstResource(String name) {
+        if (CHILD_FIRST_RESOURCE_NAMES.contains(name)) {
+            return true
+        }
         for (String prefix : CHILD_FIRST_RESOURCE_PREFIXES) {
             if (name.startsWith(prefix)) {
                 return true

@@ -34,7 +34,8 @@ dependencies {
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
     implementation("org.jetbrains.kotlin:kotlin-reflect")
 
-    runtimeOnly("org.apache.derby:derby:10.17.1.0")
+    runtimeOnly("org.apache.derby:derby:10.16.1.1")
+    runtimeOnly("org.apache.derby:derbytools:10.16.1.1")
     runtimeOnly("org.postgresql:postgresql:42.7.8")
 
     testImplementation("org.springframework.boot:spring-boot-starter-test")
