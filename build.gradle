@@ -378,7 +378,12 @@ test {
     jvmArgs "-javaagent:${classpath.find { it.name.contains('jmockit') }.absolutePath}"
 }
 
-processResources.mustRunAfter 'generateSecretKeys'
+processResources {
+    dependsOn 'generateSecretKeys'
+    // The generateSecretKeys task mutates a tracked resource file in-place.
+    // Force recopy so tests do not read a stale security.properties from build/resources.
+    outputs.upToDateWhen { false }
+}
 
 /* ========================================================
  * Tasks
