@@ -23,8 +23,8 @@ struct LeadDetailView: View {
     }
 
     private var requestActionTitle: String {
-        guard let detail else { return "Add Request" }
-        return detail.request == nil ? "Add Request" : "Edit Request"
+        guard let detail else { return "Anfrage hinzufügen" }
+        return detail.request == nil ? "Anfrage hinzufügen" : "Anfrage bearbeiten"
     }
 
     var body: some View {
@@ -44,7 +44,7 @@ struct LeadDetailView: View {
                         if !detail.email.isEmpty {
                             Text(detail.email)
                         }
-                        Text(detail.companyName ?? "No company")
+                        Text(detail.companyName ?? "Kein Unternehmen")
                     } header: {
                         HStack {
                             Text("Lead")
@@ -52,7 +52,7 @@ struct LeadDetailView: View {
                         }
                     }
                     if let request = detail.request {
-                        Section("Request") {
+                        Section("Anfrage") {
                             Text(request.name)
                             if let description = request.description { Text(description) }
                         }
@@ -68,19 +68,19 @@ struct LeadDetailView: View {
                     }
                 }
             } else if isLoading {
-                ProgressView("Loading…")
+                ProgressView("Wird geladen…")
             } else {
-                ContentUnavailableView("Lead unavailable", systemImage: "person.fill.xmark")
+                ContentUnavailableView("Lead nicht verfugbar", systemImage: "person.fill.xmark")
             }
         }
-        .navigationTitle("Lead Detail")
+        .navigationTitle("Lead")
         .navigationDestination(isPresented: $isShowingRequestForm) {
             if let detail {
                 RequestFormView(store: store, detail: detail)
             }
         }
         .task { await refresh() }
-        .alert("Error", isPresented: .constant(errorMessage != nil), actions: {
+        .alert("Fehler", isPresented: .constant(errorMessage != nil), actions: {
             Button("OK") { errorMessage = nil }
         }, message: {
             Text(errorMessage ?? "")

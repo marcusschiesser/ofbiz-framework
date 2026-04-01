@@ -57,7 +57,7 @@ struct LeadListView: View {
                                         .padding(.vertical, 2)
                                         .background(stageTint(for: lead.stage).opacity(0.12), in: Capsule())
                                 }
-                                Text(lead.companyName ?? "No company").font(.subheadline)
+                                Text(lead.companyName ?? "Kein Unternehmen").font(.subheadline)
                                 if let email = lead.email, !email.isEmpty {
                                     Text(email).font(.caption).foregroundStyle(.secondary)
                                 }
@@ -71,19 +71,19 @@ struct LeadListView: View {
         .navigationDestination(for: String.self) { partyId in
             LeadDetailView(store: store, partyId: partyId)
         }
-        .searchable(text: $searchText, prompt: "Search name, company, email")
+        .searchable(text: $searchText, prompt: "Nach Name, Unternehmen, E-Mail suchen")
         .navigationTitle("Leads")
         .toolbar {
-            NavigationLink("New Lead") {
+            NavigationLink("Neuer Lead") {
                 NewLeadView(store: store)
             }
         }
         .overlay {
-            if store.isLoading { ProgressView("Loading leads…") }
+            if store.isLoading { ProgressView("Leads werden geladen…") }
         }
         .task { await store.loadLeads() }
         .refreshable { await store.loadLeads() }
-        .alert("Error", isPresented: .constant(store.errorMessage != nil), actions: {
+        .alert("Fehler", isPresented: .constant(store.errorMessage != nil), actions: {
             Button("OK") { store.errorMessage = nil }
         }, message: {
             Text(store.errorMessage ?? "")

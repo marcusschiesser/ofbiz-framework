@@ -23,17 +23,17 @@ struct RequestFormView: View {
     private var isLocked: Bool { detail.request?.isLocked == true }
     private var trimmedName: String { name.trimmingCharacters(in: .whitespacesAndNewlines) }
     private var nameError: String? {
-        attemptedSubmit && trimmedName.isEmpty ? "Request name is required." : nil
+        attemptedSubmit && trimmedName.isEmpty ? "Name ist erforderlich." : nil
     }
     private var lineItemsError: String? {
-        attemptedSubmit && lines.isEmpty ? "At least one line item is required." : nil
+        attemptedSubmit && lines.isEmpty ? "Mindestens eine Position ist erforderlich." : nil
     }
 
     var body: some View {
         Form {
-            Section("Request") {
+            Section("Anfrage") {
                 VStack(alignment: .leading, spacing: 4) {
-                    TextField("Request name", text: $name)
+                    TextField("Name", text: $name)
                     .focused($focusedField, equals: .name)
                     .submitLabel(.next)
                     .onSubmit {
@@ -49,15 +49,15 @@ struct RequestFormView: View {
                             .foregroundStyle(.red)
                     }
                 }
-                TextField("Description", text: $description, axis: .vertical)
+                TextField("Beschreibung", text: $description, axis: .vertical)
                     .disabled(isLocked)
             }
 
-            Section("Line Items") {
+            Section("Positionen") {
                 ForEach($lines) { $line in
                     VStack(alignment: .leading, spacing: 4) {
                         HStack(alignment: .firstTextBaseline, spacing: 12) {
-                            TextField("Description", text: $line.description)
+                            TextField("Beschreibung", text: $line.description)
                             .focused($focusedField, equals: .lineDescription(line.id))
                             .submitLabel(.next)
 
@@ -69,23 +69,23 @@ struct RequestFormView: View {
                             .buttonStyle(.borderless)
                             .disabled(isLocked)
                         }
-                        TextField("Quantity", value: $line.quantity, format: .number)
+                        TextField("Menge", value: $line.quantity, format: .number)
                             .keyboardType(.decimalPad)
-                        TextField("Unit price", value: $line.unitPrice, format: .currency(code: "EUR"))
+                        TextField("Einzelpreis", value: $line.unitPrice, format: .currency(code: "EUR"))
                             .keyboardType(.decimalPad)
 
                         if attemptedSubmit && line.description.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-                            Text("Each line needs a description.")
+                            Text("Jede Position braucht eine Beschreibung.")
                                 .font(.caption)
                                 .foregroundStyle(.red)
                         }
                         if attemptedSubmit && line.quantity == nil {
-                            Text("Each line needs a quantity.")
+                            Text("Jede Position braucht eine Menge.")
                                 .font(.caption)
                                 .foregroundStyle(.red)
                         }
                         if attemptedSubmit && line.unitPrice == nil {
-                            Text("Each line needs a unit price.")
+                            Text("Jede Position braucht einen Einzelpreis.")
                                 .font(.caption)
                                 .foregroundStyle(.red)
                         }
@@ -103,7 +103,7 @@ struct RequestFormView: View {
                         .foregroundStyle(.red)
                 }
 
-                Button("Add line") {
+                Button("Position hinzufuegen") {
                     lines.append(OpportunityRequestLineInput(description: "", quantity: nil, unitPrice: nil))
                 }
                 .disabled(isLocked)
@@ -119,14 +119,14 @@ struct RequestFormView: View {
                 Button {
                     Task { await save() }
                 } label: {
-                    Text(isSaving ? "Saving…" : "Save request")
+                    Text(isSaving ? "Speichern…" : "Anfrage speichern")
                         .frame(maxWidth: .infinity)
                 }
                 .disabled(isSaving || isLocked)
                 .primaryActionButtonStyle()
             }
         }
-        .navigationTitle("Customer Request")
+        .navigationTitle("Kundenanfrage")
         .onAppear {
             if let existing = detail.request {
                 name = existing.name

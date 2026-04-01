@@ -45,26 +45,26 @@ struct NewLeadView: View {
     }
 
     private var firstNameError: String? {
-        attemptedSubmit && trimmedFirstName.isEmpty ? "First name is required." : nil
+        attemptedSubmit && trimmedFirstName.isEmpty ? "Vorname ist erforderlich." : nil
     }
 
     private var lastNameError: String? {
-        attemptedSubmit && trimmedLastName.isEmpty ? "Last name is required." : nil
+        attemptedSubmit && trimmedLastName.isEmpty ? "Nachname ist erforderlich." : nil
     }
 
     private var emailError: String? {
         guard attemptedSubmit else { return nil }
-        if trimmedEmail.isEmpty { return "Email is required." }
-        if !hasValidEmailFormat { return "Enter a valid email address." }
+        if trimmedEmail.isEmpty { return "E-Mail ist erforderlich." }
+        if !hasValidEmailFormat { return "Bitte eine gueltige E-Mail-Adresse eingeben." }
         return nil
     }
 
     var body: some View {
         Form {
-            Section("Required") {
+            Section("Pflichtfelder") {
                 VStack(alignment: .leading, spacing: 4) {
-                    TextField(text: $model.firstName, prompt: Text("Required")) {
-                        Text("First name")
+                    TextField(text: $model.firstName, prompt: Text("Pflichtfeld")) {
+                        Text("Vorname")
                     }
                     .focused($focusedField, equals: .firstName)
                     .textContentType(.givenName)
@@ -79,8 +79,8 @@ struct NewLeadView: View {
                 }
 
                 VStack(alignment: .leading, spacing: 4) {
-                    TextField(text: $model.lastName, prompt: Text("Required")) {
-                        Text("Last name")
+                    TextField(text: $model.lastName, prompt: Text("Pflichtfeld")) {
+                        Text("Nachname")
                     }
                     .focused($focusedField, equals: .lastName)
                     .textContentType(.familyName)
@@ -95,8 +95,8 @@ struct NewLeadView: View {
                 }
 
                 VStack(alignment: .leading, spacing: 4) {
-                    TextField(text: $model.email, prompt: Text("Required")) {
-                        Text("Email")
+                    TextField(text: $model.email, prompt: Text("Pflichtfeld")) {
+                        Text("E-Mail")
                     }
                     .focused($focusedField, equals: .email)
                     .textInputAutocapitalization(.never)
@@ -114,9 +114,9 @@ struct NewLeadView: View {
                 }
             }
             Section("Optional") {
-                TextField("Company", text: $model.companyName)
+                TextField("Unternehmen", text: $model.companyName)
                     .textContentType(.organizationName)
-                TextField("Title", text: $model.title)
+                TextField("Position", text: $model.title)
                     .textContentType(.jobTitle)
             }
 
@@ -130,14 +130,14 @@ struct NewLeadView: View {
                 Button {
                     Task { await save() }
                 } label: {
-                    Text(isSaving ? "Saving…" : "Create Lead")
+                    Text(isSaving ? "Speichern…" : "Lead erstellen")
                         .frame(maxWidth: .infinity)
                 }
                 .disabled(isSaving)
                 .primaryActionButtonStyle()
             }
         }
-        .navigationTitle("New Lead")
+        .navigationTitle("Neuer Lead")
         .navigationDestination(item: $createdDetail) { detail in
             LeadDetailView(store: store, partyId: detail.partyId)
         }

@@ -45,9 +45,9 @@ enum OpportunityStage: String, Codable {
 
     var badgeTitle: String {
         switch self {
-        case .NEW: return "New"
-        case .REQUEST_READY: return "Request Ready"
-        case .QUOTE_READY: return "Quote Ready"
+        case .NEW: return "Neu"
+        case .REQUEST_READY: return "Anfrage bereit"
+        case .QUOTE_READY: return "Angebot bereit"
         }
     }
 }

@@ -9,6 +9,7 @@ struct BergmannLeadCaptureApp: App {
             NavigationStack {
                 LeadListView(store: leadStore)
             }
+            .environment(\.locale, Locale(identifier: "de_DE"))
         }
     }
 }
