@@ -7,26 +7,64 @@ struct LeadDetailView: View {
     @State private var detail: OpportunityDetail?
     @State private var isLoading = false
     @State private var errorMessage: String?
+    @State private var isShowingRequestForm = false
+
+    private var stageTint: Color {
+        guard let detail else { return .blue }
+
+        switch detail.stage {
+        case .NEW:
+            return .blue
+        case .REQUEST_READY:
+            return .orange
+        case .QUOTE_READY:
+            return .green
+        }
+    }
+
+    private var requestActionTitle: String {
+        guard let detail else { return "Add Request" }
+        return detail.request == nil ? "Add Request" : "Edit Request"
+    }
 
     var body: some View {
         Group {
             if let detail {
                 Form {
-                    Section("Lead") {
-                        Text(detail.displayName)
-                        Text(detail.email)
+                    Section {
+                        HStack(alignment: .firstTextBaseline, spacing: 8) {
+                            Text(detail.displayName)
+                            Text(detail.stage.badgeTitle)
+                                .font(.caption.weight(.semibold))
+                                .foregroundStyle(stageTint)
+                                .padding(.horizontal, 10)
+                                .padding(.vertical, 6)
+                                .background(stageTint.opacity(0.12), in: Capsule())
+                        }
+                        if !detail.email.isEmpty {
+                            Text(detail.email)
+                        }
                         Text(detail.companyName ?? "No company")
-                    }
-                    Section("Pipeline") {
-                        Text(detail.stage.badgeTitle)
-                        Text(detail.nextAction)
+                    } header: {
+                        HStack {
+                            Text("Lead")
+                            Spacer()
+                        }
                     }
                     if let request = detail.request {
                         Section("Request") {
                             Text(request.name)
                             if let description = request.description { Text(description) }
-                            Text(request.isLocked ? "Read-only" : "Editable")
                         }
+                    }
+                    Section {
+                        Button {
+                            isShowingRequestForm = true
+                        } label: {
+                            Text(requestActionTitle)
+                                .frame(maxWidth: .infinity)
+                        }
+                        .primaryActionButtonStyle()
                     }
                 }
             } else if isLoading {
@@ -36,11 +74,9 @@ struct LeadDetailView: View {
             }
         }
         .navigationTitle("Lead Detail")
-        .toolbar {
+        .navigationDestination(isPresented: $isShowingRequestForm) {
             if let detail {
-                NavigationLink("Add Request") {
-                    RequestFormView(store: store, detail: detail)
-                }
+                RequestFormView(store: store, detail: detail)
             }
         }
         .task { await refresh() }

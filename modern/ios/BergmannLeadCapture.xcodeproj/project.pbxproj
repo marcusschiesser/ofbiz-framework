@@ -10,6 +10,7 @@
 		1B98E333AD3241BA31D88EA8 /* LeadDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3E03E24A14F4CFA3A959FD31 /* LeadDetailView.swift */; };
 		2AF6BD15F7D6F14AB1E39AA0 /* LeadStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5776C144EB1B1B3A4D15A787 /* LeadStore.swift */; };
 		35704A380DA3C23406BBEBCE /* LeadStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 212CE3666C9C1A6E95723CE8 /* LeadStoreTests.swift */; };
+		48BAE7A41DCE1ED0C2D8A33F /* PrimaryActionButtonModifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = 734E9D61350FE50BEE793A22 /* PrimaryActionButtonModifier.swift */; };
 		54E667867C49086BD6C14A20 /* NewLeadView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E33653F34DCED422B195FACE /* NewLeadView.swift */; };
 		99F6669922917EBD086D5705 /* LeadListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2CBFD8AEDE926D2D77FB1D7 /* LeadListView.swift */; };
 		BC82CFEBD73A1C0A2F593BF1 /* BergmannLeadCaptureApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 98FA777584F0B0D83F5DEA1C /* BergmannLeadCaptureApp.swift */; };
@@ -33,6 +34,7 @@
 		39DEF848ADD034FBBD1F18C0 /* BergmannLeadCapture.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = BergmannLeadCapture.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		3E03E24A14F4CFA3A959FD31 /* LeadDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LeadDetailView.swift; sourceTree = "<group>"; };
 		5776C144EB1B1B3A4D15A787 /* LeadStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LeadStore.swift; sourceTree = "<group>"; };
+		734E9D61350FE50BEE793A22 /* PrimaryActionButtonModifier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrimaryActionButtonModifier.swift; sourceTree = "<group>"; };
 		871E91C347673426A1A48B00 /* BergmannLeadCaptureTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = BergmannLeadCaptureTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		98FA777584F0B0D83F5DEA1C /* BergmannLeadCaptureApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BergmannLeadCaptureApp.swift; sourceTree = "<group>"; };
 		A8EF77655455DCCFE137CC87 /* RequestFormView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RequestFormView.swift; sourceTree = "<group>"; };
@@ -88,6 +90,14 @@
 			path = Features;
 			sourceTree = "<group>";
 		};
+		73B48AC99C50A4E08EF9E0E3 /* Shared */ = {
+			isa = PBXGroup;
+			children = (
+				734E9D61350FE50BEE793A22 /* PrimaryActionButtonModifier.swift */,
+			);
+			path = Shared;
+			sourceTree = "<group>";
+		};
 		91272F24CED7EEFF57818D6A /* Products */ = {
 			isa = PBXGroup;
 			children = (
@@ -112,6 +122,7 @@
 				66EEF4D0833EC98D13F13FF6 /* Features */,
 				0531A70D32282D11A3340C72 /* Models */,
 				F6744D7CEC339977CB8FD193 /* Networking */,
+				73B48AC99C50A4E08EF9E0E3 /* Shared */,
 			);
 			path = BergmannLeadCapture;
 			sourceTree = "<group>";
@@ -215,6 +226,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				BC82CFEBD73A1C0A2F593BF1 /* BergmannLeadCaptureApp.swift in Sources */,
+				48BAE7A41DCE1ED0C2D8A33F /* PrimaryActionButtonModifier.swift in Sources */,
 				1B98E333AD3241BA31D88EA8 /* LeadDetailView.swift in Sources */,
 				99F6669922917EBD086D5705 /* LeadListView.swift in Sources */,
 				2AF6BD15F7D6F14AB1E39AA0 /* LeadStore.swift in Sources */,

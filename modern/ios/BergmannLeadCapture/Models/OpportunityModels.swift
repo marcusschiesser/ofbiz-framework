@@ -17,7 +17,7 @@ struct OpportunityListItem: Codable, Identifiable, Hashable {
     var id: String { partyId }
 }
 
-struct OpportunityDetail: Codable, Identifiable {
+struct OpportunityDetail: Codable, Identifiable, Hashable {
     let partyId: String
     let displayName: String
     let email: String
@@ -28,6 +28,14 @@ struct OpportunityDetail: Codable, Identifiable {
     let request: OpportunityRequestDetail?
 
     var id: String { partyId }
+
+    static func == (lhs: OpportunityDetail, rhs: OpportunityDetail) -> Bool {
+        lhs.partyId == rhs.partyId
+    }
+
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(partyId)
+    }
 }
 
 enum OpportunityStage: String, Codable {
@@ -50,7 +58,7 @@ struct CreateLeadRequest: Codable {
     var email: String = ""
     var companyName: String = ""
     var title: String = ""
-    var dataSourceId: String = ""
+    var dataSourceId: String = "WEB_SITE"
 }
 
 struct OpportunityRequestInput: Codable {
@@ -64,8 +72,8 @@ struct OpportunityRequestLineInput: Codable, Identifiable {
     var id: UUID = UUID()
     var description: String
     var productId: String?
-    var quantity: Decimal
-    var unitPrice: Decimal
+    var quantity: Decimal?
+    var unitPrice: Decimal?
     var story: String?
 
     enum CodingKeys: String, CodingKey {
