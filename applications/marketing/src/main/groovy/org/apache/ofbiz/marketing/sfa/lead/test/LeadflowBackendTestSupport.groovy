@@ -82,6 +82,7 @@ class LeadflowBackendTestServer {
 
     static String ensureStarted() {
         if (applicationContext != null) {
+            ensurePortResolved()
             return "http://127.0.0.1:${port}"
         }
 
@@ -99,7 +100,7 @@ class LeadflowBackendTestServer {
                         Class<?> springApplication = applicationClassLoader.loadClass('org.springframework.boot.SpringApplication')
                         applicationContext = springApplication.getMethod('run', Class, String[].class)
                                 .invoke(null, appClass, (Object) new String[0])
-                        port = resolveBoundPort(applicationContext)
+                        ensurePortResolved()
                     } catch (InvocationTargetException e) {
                         Throwable cause = e.cause
                         if (cause instanceof RuntimeException) {
@@ -220,9 +221,50 @@ class LeadflowBackendTestServer {
         throw new IllegalStateException("modern/backend did not become healthy on ${healthUri}")
     }
 
+    private static void ensurePortResolved() {
+        if (port != null) {
+            return
+        }
+        long deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(30)
+        while (System.nanoTime() < deadline) {
+            Integer resolved = resolveBoundPort(applicationContext)
+            if (resolved != null && resolved > 0) {
+                port = resolved
+                return
+            }
+            Thread.sleep(100)
+        }
+        throw new IllegalStateException('modern/backend started but did not publish a local port')
+    }
+
     private static Integer resolveBoundPort(Object context) {
-        Object webServer = context.getClass().getMethod('getWebServer').invoke(context)
-        return (Integer) webServer.getClass().getMethod('getPort').invoke(webServer)
+        if (context == null) {
+            return null
+        }
+
+        try {
+            Object webServer = context.getClass().getMethod('getWebServer').invoke(context)
+            if (webServer != null) {
+                Object resolved = webServer.getClass().getMethod('getPort').invoke(webServer)
+                if (resolved instanceof Number) {
+                    return ((Number) resolved).intValue()
+                }
+            }
+        } catch (ReflectiveOperationException ignored) {
+        }
+
+        try {
+            Object environment = context.getClass().getMethod('getEnvironment').invoke(context)
+            if (environment != null) {
+                Object resolved = environment.getClass().getMethod('getProperty', String).invoke(environment, 'local.server.port')
+                if (resolved instanceof String && !resolved.isBlank()) {
+                    return Integer.parseInt((String) resolved)
+                }
+            }
+        } catch (ReflectiveOperationException ignored) {
+        }
+
+        return null
     }
 
     private static String ofbizHome() {
