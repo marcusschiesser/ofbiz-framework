@@ -121,7 +121,7 @@ class OpportunityQueryService(
                         partyId = rs.getString("party_id"),
                         firstName = rs.getString("first_name"),
                         lastName = rs.getString("last_name"),
-                        email = rs.getString("email"),
+                        email = rs.getString("email") ?: "",
                         companyPartyId = rs.getString("company_party_id"),
                         companyName = rs.getString("company_name"),
                     )
