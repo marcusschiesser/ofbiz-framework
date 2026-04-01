@@ -16,58 +16,38 @@ class OpportunityQueryService(
         val rows =
             jdbcClient.sql(
                 """
-                with ranked_primary_email as (
-                  select
-                    pcmp.party_id,
-                    pcmp.contact_mech_id,
-                    row_number() over (
-                      partition by pcmp.party_id
-                      order by pcmp.from_date desc, pcmp.contact_mech_id desc
-                    ) as row_num
-                  from party_contact_mech_purpose pcmp
-                  where pcmp.contact_mech_purpose_type_id = 'PRIMARY_EMAIL'
-                    and pcmp.thru_date is null
-                ),
-                current_primary_email as (
-                  select party_id, contact_mech_id
-                  from ranked_primary_email
-                  where row_num = 1
-                ),
-                ranked_active_relationship as (
-                  select
-                    rel.party_id_to,
-                    rel.party_id_from,
-                    row_number() over (
-                      partition by rel.party_id_to
-                      order by rel.from_date desc, rel.party_id_from desc
-                    ) as row_num
-                  from party_relationship rel
-                  where rel.role_type_id_to = 'LEAD'
-                    and rel.role_type_id_from = 'ACCOUNT_LEAD'
-                    and rel.party_relationship_type_id = 'EMPLOYMENT'
-                    and rel.thru_date is null
-                ),
-                current_active_relationship as (
-                  select party_id_to, party_id_from
-                  from ranked_active_relationship
-                  where row_num = 1
-                )
                 select
                   p.party_id,
                   p.created_date,
                   per.first_name,
                   per.last_name,
-                  cm.info_string as email,
-                  pg.group_name as company_name,
+                  (
+                    select cm.info_string
+                    from party_contact_mech_purpose pcmp
+                    join contact_mech cm on cm.contact_mech_id = pcmp.contact_mech_id
+                    where pcmp.party_id = p.party_id
+                      and pcmp.contact_mech_purpose_type_id = 'PRIMARY_EMAIL'
+                      and pcmp.thru_date is null
+                    order by pcmp.from_date desc, pcmp.contact_mech_id desc
+                    fetch first 1 row only
+                  ) as email,
+                  (
+                    select pg.group_name
+                    from party_relationship rel
+                    join party_group pg on pg.party_id = rel.party_id_from
+                    where rel.party_id_to = p.party_id
+                      and rel.role_type_id_to = 'LEAD'
+                      and rel.role_type_id_from = 'ACCOUNT_LEAD'
+                      and rel.party_relationship_type_id = 'EMPLOYMENT'
+                      and rel.thru_date is null
+                    order by rel.from_date desc, rel.party_id_from desc
+                    fetch first 1 row only
+                  ) as company_name,
                   case when exists (select 1 from cust_request cr where cr.from_party_id = p.party_id) then 1 else 0 end as has_request,
                   case when exists (select 1 from quote q where q.party_id = p.party_id) then 1 else 0 end as has_quote
                 from party p
                 join person per on per.party_id = p.party_id
                 join party_role lead_role on lead_role.party_id = p.party_id and lead_role.role_type_id = 'LEAD'
-                left join current_primary_email cpe on cpe.party_id = p.party_id
-                left join contact_mech cm on cm.contact_mech_id = cpe.contact_mech_id
-                left join current_active_relationship car on car.party_id_to = p.party_id
-                left join party_group pg on pg.party_id = car.party_id_from
                 order by p.created_date desc, p.party_id desc
                 """.trimIndent(),
             ).query { rs, _ ->
@@ -94,55 +74,45 @@ class OpportunityQueryService(
         val lead =
             jdbcClient.sql(
                 """
-                with ranked_primary_email as (
-                  select
-                    pcmp.party_id,
-                    pcmp.contact_mech_id,
-                    row_number() over (
-                      partition by pcmp.party_id
-                      order by pcmp.from_date desc, pcmp.contact_mech_id desc
-                    ) as row_num
-                  from party_contact_mech_purpose pcmp
-                  where pcmp.contact_mech_purpose_type_id = 'PRIMARY_EMAIL'
-                    and pcmp.thru_date is null
-                ),
-                current_primary_email as (
-                  select party_id, contact_mech_id
-                  from ranked_primary_email
-                  where row_num = 1
-                ),
-                ranked_active_relationship as (
-                  select
-                    rel.party_id_to,
-                    rel.party_id_from,
-                    row_number() over (
-                      partition by rel.party_id_to
-                      order by rel.from_date desc, rel.party_id_from desc
-                    ) as row_num
-                  from party_relationship rel
-                  where rel.role_type_id_to = 'LEAD'
-                    and rel.role_type_id_from = 'ACCOUNT_LEAD'
-                    and rel.party_relationship_type_id = 'EMPLOYMENT'
-                    and rel.thru_date is null
-                ),
-                current_active_relationship as (
-                  select party_id_to, party_id_from
-                  from ranked_active_relationship
-                  where row_num = 1
-                )
                 select
                   p.party_id,
                   per.first_name,
                   per.last_name,
-                  cm.info_string as email,
-                  pg.party_id as company_party_id,
-                  pg.group_name as company_name
+                  (
+                    select cm.info_string
+                    from party_contact_mech_purpose pcmp
+                    join contact_mech cm on cm.contact_mech_id = pcmp.contact_mech_id
+                    where pcmp.party_id = p.party_id
+                      and pcmp.contact_mech_purpose_type_id = 'PRIMARY_EMAIL'
+                      and pcmp.thru_date is null
+                    order by pcmp.from_date desc, pcmp.contact_mech_id desc
+                    fetch first 1 row only
+                  ) as email,
+                  (
+                    select rel.party_id_from
+                    from party_relationship rel
+                    where rel.party_id_to = p.party_id
+                      and rel.role_type_id_to = 'LEAD'
+                      and rel.role_type_id_from = 'ACCOUNT_LEAD'
+                      and rel.party_relationship_type_id = 'EMPLOYMENT'
+                      and rel.thru_date is null
+                    order by rel.from_date desc, rel.party_id_from desc
+                    fetch first 1 row only
+                  ) as company_party_id,
+                  (
+                    select pg.group_name
+                    from party_relationship rel
+                    join party_group pg on pg.party_id = rel.party_id_from
+                    where rel.party_id_to = p.party_id
+                      and rel.role_type_id_to = 'LEAD'
+                      and rel.role_type_id_from = 'ACCOUNT_LEAD'
+                      and rel.party_relationship_type_id = 'EMPLOYMENT'
+                      and rel.thru_date is null
+                    order by rel.from_date desc, rel.party_id_from desc
+                    fetch first 1 row only
+                  ) as company_name
                 from party p
                 join person per on per.party_id = p.party_id
-                left join current_primary_email cpe on cpe.party_id = p.party_id
-                left join contact_mech cm on cm.contact_mech_id = cpe.contact_mech_id
-                left join current_active_relationship car on car.party_id_to = p.party_id
-                left join party_group pg on pg.party_id = car.party_id_from
                 where p.party_id = :partyId
                 """.trimIndent(),
             ).param("partyId", partyId)

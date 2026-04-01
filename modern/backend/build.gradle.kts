@@ -1,3 +1,5 @@
+import org.gradle.api.tasks.SourceSetContainer
+
 plugins {
     kotlin("jvm") version "2.2.20"
     kotlin("plugin.spring") version "2.2.20"
@@ -41,4 +43,20 @@ dependencies {
 
 tasks.withType<Test>().configureEach {
     useJUnitPlatform()
+}
+
+val sourceSets = the<SourceSetContainer>()
+
+tasks.register("prepareParityRuntime") {
+    dependsOn("classes")
+    val outputFile = layout.buildDirectory.file("parity/main-runtime-classpath.txt")
+    outputs.file(outputFile)
+    doLast {
+        val file = outputFile.get().asFile
+        file.parentFile.mkdirs()
+        file.writeText(
+            sourceSets.named("main").get().runtimeClasspath.files
+                .joinToString(System.lineSeparator()) { it.absolutePath },
+        )
+    }
 }
