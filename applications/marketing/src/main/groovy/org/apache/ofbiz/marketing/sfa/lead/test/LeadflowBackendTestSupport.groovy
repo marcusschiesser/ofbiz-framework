@@ -315,7 +315,6 @@ class LeadflowBackendClassLoader extends URLClassLoader {
     private static final List<String> CHILD_FIRST_PREFIXES = [
             'com.example.leadflow.',
             'org.springframework.',
-            'jakarta.',
             'kotlin.',
             'com.fasterxml.',
             'org.yaml.snakeyaml.',
