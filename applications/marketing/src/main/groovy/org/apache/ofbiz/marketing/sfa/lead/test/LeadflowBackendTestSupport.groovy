@@ -22,6 +22,8 @@ import groovy.json.JsonOutput
 import groovy.json.JsonSlurper
 
 import java.lang.reflect.InvocationTargetException
+import java.net.InetAddress
+import java.net.ServerSocket
 import java.net.http.HttpClient
 import java.net.http.HttpRequest
 import java.net.http.HttpResponse
@@ -89,7 +91,8 @@ class LeadflowBackendTestServer {
         synchronized (LOCK) {
             if (applicationContext == null) {
                 prepareRuntime()
-                Map<String, String> previous = applyProperties()
+                port = reserveLoopbackPort()
+                Map<String, String> previous = applyProperties(port)
                 try {
                     applicationClassLoader = new LeadflowBackendClassLoader(runtimeClasspathUrls(), LeadflowBackendTestServer.classLoader)
                     Thread thread = Thread.currentThread()
@@ -100,7 +103,6 @@ class LeadflowBackendTestServer {
                         Class<?> springApplication = applicationClassLoader.loadClass('org.springframework.boot.SpringApplication')
                         applicationContext = springApplication.getMethod('run', Class, String[].class)
                                 .invoke(null, appClass, (Object) new String[0])
-                        ensurePortResolved()
                     } catch (InvocationTargetException e) {
                         Throwable cause = e.cause
                         if (cause instanceof RuntimeException) {
@@ -137,7 +139,7 @@ class LeadflowBackendTestServer {
         }
     }
 
-    private static Map<String, String> applyProperties() {
+    private static Map<String, String> applyProperties(int serverPort) {
         Map<String, String> previous = [
                 SERVER_PORT: System.getProperty('SERVER_PORT'),
                 LEADFLOW_DB_URL: System.getProperty('LEADFLOW_DB_URL'),
@@ -150,7 +152,7 @@ class LeadflowBackendTestServer {
                 'server.error.include-stacktrace': System.getProperty('server.error.include-stacktrace')
         ]
         [
-                SERVER_PORT: '0',
+                SERVER_PORT: Integer.toString(serverPort),
                 LEADFLOW_DB_URL: 'jdbc:derby:ofbiz',
                 LEADFLOW_DB_DRIVER: 'org.apache.derby.jdbc.EmbeddedDriver',
                 LEADFLOW_CREATED_BY_USER_LOGIN_ID: 'system',
@@ -163,6 +165,16 @@ class LeadflowBackendTestServer {
             System.setProperty(key, value)
         }
         return previous
+    }
+
+    private static Integer reserveLoopbackPort() {
+        ServerSocket socket = new ServerSocket(0, 0, InetAddress.getByName('127.0.0.1'))
+        try {
+            socket.setReuseAddress(true)
+            return socket.localPort
+        } finally {
+            socket.close()
+        }
     }
 
     private static void restoreProperties(Map<String, String> previous) {
