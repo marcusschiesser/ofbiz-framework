@@ -99,8 +99,9 @@ class LeadflowBackendTestServer {
                     try {
                         Class<?> appClass = applicationClassLoader.loadClass('com.example.leadflow.LeadflowBackendApplication')
                         Class<?> springApplication = applicationClassLoader.loadClass('org.springframework.boot.SpringApplication')
+                        String[] startupArgs = ["--server.port=${port}".toString()] as String[]
                         applicationContext = springApplication.getMethod('run', Class, String[].class)
-                                .invoke(null, appClass, (Object) new String[0])
+                                .invoke(null, appClass, (Object) startupArgs)
                     } catch (InvocationTargetException e) {
                         Throwable cause = e.cause
                         if (cause instanceof RuntimeException) {
@@ -116,7 +117,12 @@ class LeadflowBackendTestServer {
                 } finally {
                     restoreProperties(previous)
                 }
-                waitForHealth()
+                try {
+                    waitForHealth()
+                } catch (Exception e) {
+                    stopIfStarted()
+                    throw e
+                }
             }
         }
 
