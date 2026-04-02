@@ -310,6 +310,7 @@ class LeadflowBackendClassLoader extends URLClassLoader {
             'ch.qos.logback.',
             'org.slf4j.',
             'org.apache.el.',
+            'io.netty.',
             'reactor.',
             'io.micrometer.'
     ]
