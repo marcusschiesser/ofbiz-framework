@@ -22,8 +22,6 @@ import groovy.json.JsonOutput
 import groovy.json.JsonSlurper
 
 import java.lang.reflect.InvocationTargetException
-import java.net.InetAddress
-import java.net.ServerSocket
 import java.net.http.HttpClient
 import java.net.http.HttpRequest
 import java.net.http.HttpResponse
