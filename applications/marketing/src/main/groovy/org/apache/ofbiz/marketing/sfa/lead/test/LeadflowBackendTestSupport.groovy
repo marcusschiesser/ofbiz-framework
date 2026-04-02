@@ -356,7 +356,10 @@ class LeadflowBackendClassLoader extends URLClassLoader {
         synchronized (getClassLoadingLock(name)) {
             Class<?> loaded = findLoadedClass(name)
             if (loaded == null && isChildFirst(name)) {
-                loaded = findClass(name)
+                try {
+                    loaded = findClass(name)
+                } catch (ClassNotFoundException ignored) {
+                }
             }
             if (loaded == null) {
                 loaded = super.loadClass(name, false)
