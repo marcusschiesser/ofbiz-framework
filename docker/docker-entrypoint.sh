@@ -105,6 +105,9 @@
 # /docker-entrypoint-hooks/after-data-load.d
 # Executed after any data loading has been performed. Only executed if data loading was required.
 #
+# /docker-entrypoint-hooks/after-admin-load.d
+# Executed after the admin user has been loaded or confirmed.
+#
 ###############################################################################
 set -x
 set -e
@@ -250,6 +253,8 @@ load_admin_user() {
 
     touch "$CONTAINER_ADMIN_LOADED"
   fi
+
+  run_init_hooks after-admin-load /docker-entrypoint-hooks/after-admin-load.d/*
 }
 
 ###############################################################################

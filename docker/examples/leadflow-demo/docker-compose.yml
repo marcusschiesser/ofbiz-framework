@@ -50,11 +50,13 @@ services:
       - 8443:8443
     volumes:
       - ../postgres-demo/after-config-applied.d:/docker-entrypoint-hooks/after-config-applied.d
+      - ./additional-data.d:/docker-entrypoint-hooks/additional-data.d
+      - ./after-admin-load.d:/docker-entrypoint-hooks/after-admin-load.d
       - ./logs/ofbiz:/ofbiz/runtime/logs
     env_file:
       - ../postgres-demo/ofbiz-postgres.env
     environment:
-      OFBIZ_DATA_LOAD: demo
+      OFBIZ_DATA_LOAD: seed
       OFBIZ_HOST: localhost
       OFBIZ_CONTENT_URL_PREFIX: https://localhost:8443
 

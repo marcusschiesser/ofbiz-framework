@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<entity-engine-xml>
+    <!-- Compose-local demo data for the leadflow Docker stack only. -->
+
+    <Party partyId="DemoLeadOwner" partyTypeId="PERSON" statusId="PARTY_ENABLED"/>
+    <Person partyId="DemoLeadOwner" firstName="Demo" lastName="LeadOwner"/>
+    <PartyRole partyId="DemoLeadOwner" roleTypeId="_NA_"/>
+    <PartyRole partyId="DemoLeadOwner" roleTypeId="OWNER"/>
+    <PartyStatus partyId="DemoLeadOwner" statusId="PARTY_ENABLED" statusDate="2001-01-01 12:00:00.0"/>
+
+    <Party partyId="sfa102" partyTypeId="PARTY_GROUP" statusId="PARTY_ENABLED"/>
+    <PartyGroup partyId="sfa102" groupName="Ein vielversprechendes Lead-Unternehmen"/>
+    <PartyRole partyId="sfa102" roleTypeId="ACCOUNT_LEAD"/>
+    <PartyRole partyId="sfa102" roleTypeId="_NA_"/>
+    <PartyStatus partyId="sfa102" statusId="PARTY_ENABLED" statusDate="2001-01-01 12:00:00.0"/>
+
+    <Party partyId="sfa101" partyTypeId="PERSON" statusId="PARTY_ENABLED"/>
+    <Person partyId="sfa101" firstName="John" lastName="Lead"/>
+    <PartyRole partyId="sfa101" roleTypeId="_NA_"/>
+    <PartyRole partyId="sfa101" roleTypeId="LEAD"/>
+    <PartyStatus partyId="sfa101" statusId="PARTY_ENABLED" statusDate="2001-01-01 12:00:00.0"/>
+
+    <PartyRelationship partyIdFrom="sfa102" roleTypeIdFrom="ACCOUNT_LEAD" partyIdTo="sfa101" roleTypeIdTo="LEAD" fromDate="2000-01-01 00:00:00.000" partyRelationshipTypeId="EMPLOYMENT"/>
+    <PartyRelationship partyIdFrom="DemoLeadOwner" roleTypeIdFrom="OWNER" partyIdTo="sfa101" roleTypeIdTo="LEAD" fromDate="2000-01-01 00:00:00.000" partyRelationshipTypeId="LEAD_OWNER"/>
+
+    <ContactMech contactMechId="sfa103" contactMechTypeId="EMAIL_ADDRESS" infoString="john.lead@beispiel.de"/>
+    <PartyContactMech partyId="sfa101" contactMechId="sfa103" fromDate="2000-01-01 00:00:00.000"/>
+    <PartyContactMechPurpose partyId="sfa101" contactMechId="sfa103" contactMechPurposeTypeId="PRIMARY_EMAIL" fromDate="2000-01-01 00:00:00.000"/>
+</entity-engine-xml>
