@@ -63,7 +63,7 @@ struct NewLeadView: View {
         Form {
             Section("Pflichtfelder") {
                 VStack(alignment: .leading, spacing: 4) {
-                    TextField(text: $model.firstName, prompt: Text("Pflichtfeld")) {
+                    TextField(text: $model.firstName, prompt: Text("Vorname")) {
                         Text("Vorname")
                     }
                     .focused($focusedField, equals: .firstName)
@@ -79,7 +79,7 @@ struct NewLeadView: View {
                 }
 
                 VStack(alignment: .leading, spacing: 4) {
-                    TextField(text: $model.lastName, prompt: Text("Pflichtfeld")) {
+                    TextField(text: $model.lastName, prompt: Text("Nachname")) {
                         Text("Nachname")
                     }
                     .focused($focusedField, equals: .lastName)
@@ -95,7 +95,7 @@ struct NewLeadView: View {
                 }
 
                 VStack(alignment: .leading, spacing: 4) {
-                    TextField(text: $model.email, prompt: Text("Pflichtfeld")) {
+                    TextField(text: $model.email, prompt: Text("E-Mail")) {
                         Text("E-Mail")
                     }
                     .focused($focusedField, equals: .email)
