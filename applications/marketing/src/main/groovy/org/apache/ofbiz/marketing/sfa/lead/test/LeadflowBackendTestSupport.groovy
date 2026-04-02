@@ -99,9 +99,14 @@ class LeadflowBackendTestServer {
                     try {
                         Class<?> appClass = applicationClassLoader.loadClass('com.example.leadflow.LeadflowBackendApplication')
                         Class<?> springApplication = applicationClassLoader.loadClass('org.springframework.boot.SpringApplication')
+                        Object springApplicationInstance = springApplication
+                                .getConstructor(Class[].class)
+                                .newInstance((Object) ([appClass] as Class[]))
+                        springApplication.getMethod('setRegisterShutdownHook', Boolean.TYPE)
+                                .invoke(springApplicationInstance, false)
                         String[] startupArgs = ["--server.port=${port}".toString()] as String[]
-                        applicationContext = springApplication.getMethod('run', Class, String[].class)
-                                .invoke(null, appClass, (Object) startupArgs)
+                        applicationContext = springApplication.getMethod('run', String[].class)
+                                .invoke(springApplicationInstance, (Object) startupArgs)
                     } catch (InvocationTargetException e) {
                         Throwable cause = e.cause
                         if (cause instanceof RuntimeException) {
@@ -356,10 +361,7 @@ class LeadflowBackendClassLoader extends URLClassLoader {
         synchronized (getClassLoadingLock(name)) {
             Class<?> loaded = findLoadedClass(name)
             if (loaded == null && isChildFirst(name)) {
-                try {
-                    loaded = findClass(name)
-                } catch (ClassNotFoundException ignored) {
-                }
+                loaded = findClass(name)
             }
             if (loaded == null) {
                 loaded = super.loadClass(name, false)
