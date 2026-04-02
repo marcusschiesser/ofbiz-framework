@@ -123,6 +123,10 @@ class LeadflowBackendTestServer {
                     restoreProperties(previous)
                 }
                 try {
+                    Integer resolved = resolveBoundPort(applicationContext)
+                    if (resolved != null && resolved > 0) {
+                        port = resolved
+                    }
                     waitForHealth()
                 } catch (Exception e) {
                     stopIfStarted()
@@ -224,10 +228,15 @@ class LeadflowBackendTestServer {
         HttpClient client = HttpClient.newBuilder()
                 .connectTimeout(Duration.ofSeconds(2))
                 .build()
-        URI healthUri = URI.create("http://127.0.0.1:${port}/actuator/health")
         long deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(60)
+        String lastFailure = 'no response received'
         while (System.nanoTime() < deadline) {
             try {
+                Integer resolved = resolveBoundPort(applicationContext)
+                if (resolved != null && resolved > 0) {
+                    port = resolved
+                }
+                URI healthUri = URI.create("http://127.0.0.1:${port}/actuator/health")
                 HttpResponse<String> response = client.send(
                         HttpRequest.newBuilder(healthUri).timeout(Duration.ofSeconds(2)).GET().build(),
                         HttpResponse.BodyHandlers.ofString()
@@ -235,11 +244,14 @@ class LeadflowBackendTestServer {
                 if (response.statusCode() in 200..299 && response.body().contains('"status":"UP"')) {
                     return
                 }
-            } catch (Exception ignored) {
+                lastFailure = "HTTP ${response.statusCode()} from ${healthUri} with body ${response.body()}"
+            } catch (Exception e) {
+                lastFailure = "${e.class.simpleName}: ${e.message}"
             }
             Thread.sleep(250)
         }
-        throw new IllegalStateException("modern/backend did not become healthy on ${healthUri}")
+        URI healthUri = URI.create("http://127.0.0.1:${port}/actuator/health")
+        throw new IllegalStateException("modern/backend did not become healthy on ${healthUri}; last failure: ${lastFailure}")
     }
 
     private static void ensurePortResolved() {
