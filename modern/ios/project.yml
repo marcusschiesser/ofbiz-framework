@@ -1,0 +1,51 @@
+name: BergmannLeadCapture
+options:
+  deploymentTarget:
+    iOS: "17.0"
+settings:
+  base:
+    PRODUCT_NAME: BergmannLeadCapture
+    SWIFT_VERSION: "5.0"
+    DEVELOPMENT_TEAM: ""
+    CODE_SIGN_STYLE: Automatic
+    CODE_SIGNING_ALLOWED: NO
+    CODE_SIGNING_REQUIRED: NO
+targets:
+  BergmannLeadCapture:
+    type: application
+    supportedDestinations: [iOS]
+    sources:
+      - path: BergmannLeadCapture
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.marcusschesser.bergmannleadcapture
+        GENERATE_INFOPLIST_FILE: YES
+        INFOPLIST_KEY_UIApplicationSceneManifest_Generation: YES
+        INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents: YES
+        INFOPLIST_KEY_UILaunchScreen_Generation: YES
+        INFOPLIST_KEY_CFBundleDisplayName: Bergmann Lead Capture
+        INFOPLIST_KEY_CFBundleName: BergmannLeadCapture
+        SUPPORTS_MACCATALYST: NO
+        TARGETED_DEVICE_FAMILY: "1,2"
+  BergmannLeadCaptureTests:
+    type: bundle.unit-test
+    supportedDestinations: [iOS]
+    sources:
+      - path: BergmannLeadCaptureTests
+    dependencies:
+      - target: BergmannLeadCapture
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.marcusschesser.bergmannleadcaptureTests
+        GENERATE_INFOPLIST_FILE: YES
+        TEST_HOST: ""
+        BUNDLE_LOADER: ""
+schemes:
+  BergmannLeadCapture:
+    build:
+      targets:
+        BergmannLeadCapture: all
+        BergmannLeadCaptureTests: [test]
+    test:
+      targets:
+        - name: BergmannLeadCaptureTests
